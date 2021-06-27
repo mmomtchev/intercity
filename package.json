@@ -1,0 +1,35 @@
+{
+  "name": "intercity.js",
+  "version": "0.0.1",
+  "description": "An Express.js-like WMS/WMTS server",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mmomtchev/intercity.git"
+  },
+  "keywords": [
+    "node",
+    "wms",
+    "wmts",
+    "gdal",
+    "express"
+  ],
+  "author": "Momtchil Momtchev <momtchil@momtchev.com>",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/mmomtchev/intercity/issues"
+  },
+  "homepage": "https://github.com/mmomtchev/intercity#readme",
+  "dependencies": {
+    "fastify": "^3.18.0",
+    "gdal-async": "^3.3.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.29.0",
+    "nodemon": "^2.0.7"
+  }
+}
