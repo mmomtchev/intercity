@@ -8,6 +8,7 @@ const core = require('./core');
 const Reply = require('./reply');
 const Request = require('./request');
 const formats = require('./format').formats;
+const { getQueryParam } = require('./utils');
 
 const wmsAttrs = {
     '1.1.1': { version: '1.1.1' },
@@ -28,22 +29,24 @@ class WMS {
     }
 
     async main(request, reply) {
-        if (request.query.SERVICE !== 'WMS')
-            throw new Error(`Invalid service ${request.query.SERVICE}, only WMS supported`);
-        let version = request.query.VERSION || this.defaultVersion;
+        const service = getQueryParam(request.query, 'service', 'WMS');
+        if (service !== 'WMS')
+            throw new Error(`Invalid service ${service}, only WMS supported`);
+        let version = getQueryParam(request.query, 'version', this.defaultVersion);
         if (semver.gt(version, '1.3.0'))
             throw new Error(`Invalid service WMS version ${version}, up to 1.3.0 supported`);
         if (semver.lt(version, '1.3.0') && semver.gte(version, '1.1.1'))
             version = '1.1.1';
         if (semver.lt(version, '1.1.1'))
             throw new Error(`Invalid service WMS version ${version}, starting from 1.1.1 supported`);
-        switch (request.query.REQUEST) {
+        const wmsRequest = getQueryParam(request.query, 'request');
+        switch (wmsRequest) {
             case 'GetCapabilities':
                 return this.getCapabilities(version);
             case 'GetMap':
                 return this.getMap(request, reply);
             default:
-                throw new Error(`Invalid request ${request.query.REQUEST}`);
+                throw new Error(`Invalid request ${wmsRequest}`);
         }
     }
 
@@ -114,22 +117,25 @@ class WMS {
     }
 
     getMap(request, reply) {
-        if (typeof request.query.LAYERS !== 'string') throw new Error('LAYERS must be a list of string');
-        const layers = request.query.LAYERS.split(',');
+        const layersString = getQueryParam(request.query, 'layers');
+        if (typeof layersString !== 'string') throw new Error('LAYERS must be a list of string');
+        const layers = layersString.split(',');
         fastify.log.debug(`WMS> GetMap ${layers}`);
         let format;
-        if (request.query.FORMAT) {
-            format = formats.find((x) => x.mime === request.query.FORMAT);
-            if (!format) throw new Error(`Unsupported format ${request.query.FORMAT}`);
+        const queryFormat = getQueryParam(request.query, 'format');
+        if (queryFormat) {
+            format = formats.find((x) => x.mime === queryFormat);
+            if (!format) throw new Error(`Unsupported format ${queryFormat}`);
         } else {
             format = formats[0];
         }
-        const width = +(request.query.WIDTH || 512);
-        const height = +(request.query.HEIGHT || 512);
+        const width = +(getQueryParam(request.query, 'width', 512));
+        const height = +(getQueryParam(request.query, 'height', 512));
+        const bbox = getQueryParam(request.query, 'bbox');
         for (const l of core.layers) {
             if (layers.includes(l.name)) {
                 const srs = l.srs;
-                const mapRequest = new Request(request, l, srs, request.query.BBOX, format, width, height);
+                const mapRequest = new Request(request, l, srs, bbox, format, width, height);
                 fastify.log.debug(`WMS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`);
                 return l.handler(mapRequest, new Reply(mapRequest, reply, l));
             }
