@@ -69,6 +69,12 @@ Reply.prototype[windowSymbol] = function(band) {
     if (!band.ds.srs) {
         band.ds.srs = this[layerSymbol].srs;
     }
+    if (!band.ds.geoTransform) {
+        const bbox = this[requestSymbol].bbox;
+        band.ds.geoTransform = [
+            bbox.minX, (bbox.maxX - bbox.minX) / band.ds.rasterSize.x, 0,
+            bbox.maxY, 0, (bbox.minY - bbox.maxY) / band.ds.rasterSize.y];
+    }
     if (!band.ds.srs || !band.ds.srs.isSame(this[layerSymbol].srs))
         throw new Error('Band SRS must match the main SRS of the served layer');
     const xform = new gdal.CoordinateTransformation(this[requestSymbol].srs, band.ds);

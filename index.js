@@ -19,9 +19,6 @@ intercity.layer({
     bbox: { minX: -8, minY: 38, maxX: 12, maxY: 53 }
 }, async (request, reply) => {
     const ds = await gdal.openAsync('temp', 'w', 'MEM', 128, 128, 1, gdal.GDT_CFloat32);
-    ds.srs = gdal.SpatialReference.fromEPSG(4326);
-    ds.geoTransform = [ -8, (12 + 8) / 128, 0, 53, 0, (38-53) / 128 ];
-    console.log('geotransform', ds.geoTransform);
     const band = await ds.bands.getAsync(1);
     const data = new Uint8Array(128 * 128);
     for (let i = 0; i < data.length; i++)
