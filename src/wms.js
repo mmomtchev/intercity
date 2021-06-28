@@ -2,6 +2,7 @@
 
 const { create, fragment } = require('xmlbuilder2');
 const fastify = require('fastify')({ logger: { level: 'debug' } });
+const semver = require('semver');
 
 const core = require('./core');
 const Reply = require('./reply');
@@ -11,11 +12,16 @@ const formats = require('./format').formats;
 async function main(request, reply) {
     if (request.query.SERVICE !== 'WMS')
         throw new Error(`Invalid service ${request.query.SERVICE}, only WMS supported`);
-    if (request.query.VERSION !== '1.1.1')
-        throw new Error(`Invalid service WMS version ${request.query.VERSION}, only 1.1.1 supported`);
-    switch(request.query.REQUEST) {
+    let version = request.query.VERSION || '1.3.0';
+    if (semver.gt(version, '1.3.0'))
+        throw new Error(`Invalid service WMS version ${version}, up to 1.3.0 supported`);
+    if (semver.lt(version, '1.3.0') && semver.gte(version, '1.1.1'))
+        version = '1.1.1';
+    if (semver.lt(version, '1.1.1'))
+        throw new Error(`Invalid service WMS version ${version}, starting from 1.1.1 supported`);
+    switch (request.query.REQUEST) {
         case 'GetCapabilities':
-            return getCapabilites();
+            return getCapabilites(version);
         case 'GetMap':
             return getMap(request, reply);
         default:
@@ -30,13 +36,13 @@ function wmsLayers() {
         const bb = l.bbox;
         layers
             .ele('Layer')
-                .ele('Name').txt(l.name).up()
-                .ele('Title').txt(l.title).up()
-                .ele('SRS').txt(`EPSG:${l.epsg}`).up()
-                .ele('LatLonBoundingBox', { minx: bb.minX, miny: bb.minY, maxx: bb.maxX, maxy: bb.maxY }).up()
-                .ele('BoundingBox', { SRS: `EPSG:${l.epsg}`, minx: llbb.minX, miny: llbb.minY, maxx: llbb.maxX, maxy: llbb.maxY }).up()
+            .ele('Name').txt(l.name).up()
+            .ele('Title').txt(l.title).up()
+            .ele('SRS').txt(`EPSG:${l.epsg}`).up()
+            .ele('LatLonBoundingBox', { minx: bb.minX, miny: bb.minY, maxx: bb.maxX, maxy: bb.maxY }).up()
+            .ele('BoundingBox', { SRS: `EPSG:${l.epsg}`, minx: llbb.minX, miny: llbb.minY, maxx: llbb.maxX, maxy: llbb.maxY }).up()
             .up()
-        .up();
+            .up();
     }
     return layers.up();
 }
@@ -49,40 +55,52 @@ function wmsFormats() {
     return list;
 }
 
-function getCapabilites() {
-    const caps = create({ version: '1.0' })
-        .dtd({ sysID: 'http://schemas.opengis.net/wms/1.1.1/WMS_MS_Capabilities.dtd'})
-        .ele('WMT_MS_Capabilities', { version: '1.1.1' })
-            .ele('Service')
-                .ele('Name').txt('OGC:WMS').up()
-                .ele('Title').txt('intercity.js').up()
-                .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': 'http://localhost:3000/wms' }).up()
-            .up()
-            .ele('Capability')
-                .ele('Request')
-                    .ele('GetCapabilities')
-                        .ele('Format').txt('application/vnd.ogc.wms_xml').up()
-                        .ele('DCPType')
-                            .ele('HTTP')
-                                .ele('Get')
-                                    .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': 'http://localhost:3000/wms' }).up()
-                                .up()
-                            .up()
-                        .up()
-                    .up()
-                    .ele('GetMap')
-                        .import(wmsFormats())
-                        .ele('DCPType')
-                            .ele('HTTP')
-                                .ele('Get')
-                                    .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': 'http://localhost:3000/wms' }).up()
-                                .up()
+const wmsAttrs = {
+    '1.1.1': { version: '1.1.1' },
+    '1.3.0': {
+        version: '1.3.0',
+        'xmlns': 'http://www.opengis.net/wms',
+        'xmlns:sld': 'http://www.opengis.net/sld',
+        'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+        'xsi:schemaLocation': 'http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd'
+    }
+};
+
+function getCapabilites(version) {
+    let caps = create({ version: '1.0' });
+    if (version === '1.1.1') caps = caps.dtd({ sysID: 'http://schemas.opengis.net/wms/1.1.1/WMS_MS_Capabilities.dtd' });
+
+    caps.ele('WMT_MS_Capabilities', { ...wmsAttrs[version] })
+        .ele('Service')
+            .ele('Name').txt('OGC:WMS').up()
+            .ele('Title').txt('intercity.js').up()
+            .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': 'http://localhost:3000/wms' }).up()
+        .up()
+        .ele('Capability')
+            .ele('Request')
+                .ele('GetCapabilities')
+                    .ele('Format').txt('application/vnd.ogc.wms_xml').up()
+                    .ele('DCPType')
+                        .ele('HTTP')
+                            .ele('Get')
+                                .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': 'http://localhost:3000/wms' }).up()
                             .up()
                         .up()
                     .up()
                 .up()
-                .import(wmsLayers())
-            .up();
+                .ele('GetMap')
+                    .import(wmsFormats())
+                    .ele('DCPType')
+                        .ele('HTTP')
+                            .ele('Get')
+                                .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': 'http://localhost:3000/wms' }).up()
+                            .up()
+                        .up()
+                    .up()
+                .up()
+            .up()
+            .import(wmsLayers())
+        .up();
 
     const xml = caps.root().end({ prettyPrint: true });
     return xml;
