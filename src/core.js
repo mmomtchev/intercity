@@ -4,6 +4,8 @@ const fastify = require('fastify')({ logger: { level: 'debug' } });
 
 const wgs84 = gdal.SpatialReference.fromEPSG(4326);
 
+let updateSequence = 1;
+
 class Layer {
     constructor(_opts) {
         const opts = _opts || {};
@@ -32,11 +34,19 @@ const layers = [];
 
 function layer(opts, handler) {
     const l = new Layer({...opts, handler});
-    layers.push(l);
     fastify.log.debug(`layer> create ${l}`);
+    updateSequence++;
+    return layers.push(l) - 1;
+}
+
+function unlayer(idx) {
+    updateSequence++;
+    layers.splice(idx, 1);
 }
 
 module.exports = {
+    updateSequence,
     layers,
-    layer
+    layer,
+    unlayer
 };
