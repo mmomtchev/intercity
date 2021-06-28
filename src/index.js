@@ -17,8 +17,9 @@ async function listen(port) {
     }
 }
 
-function handle(handler, url) {
-    fastify.get(url, handler.main);
+function handle(proto, base, path) {
+    const handler = new proto(path, base);
+    fastify.get(path, handler.main.bind(handler));
 }
 
 function use(format) {

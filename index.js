@@ -42,7 +42,7 @@ intercity.layer({
     return reply.rgb([0, 0, rain_band]);
 });
 
-intercity.handle(intercity.wms, '/wms');
+intercity.handle(intercity.wms, 'http://localhost:3000', '/wms');
 intercity.use(intercity.png);
 intercity.use(intercity.jpeg);
 
