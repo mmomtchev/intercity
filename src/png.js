@@ -5,7 +5,7 @@ const Format = require('./format').Format;
 let uid = 1;
 class PNG extends Format {
     constructor() {
-        super('PNG', 'image/png');
+        super('PNG', 'image/png', 'png');
     }
 
     async produce(ds) {

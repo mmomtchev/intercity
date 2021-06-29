@@ -1,7 +1,8 @@
 class Format {
-    constructor(name, mime) {
+    constructor(name, mime, ext) {
         this.name = name;
         this.mime = mime;
+        this.ext = ext;
     }
 
     produce(ds) {

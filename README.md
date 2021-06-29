@@ -43,10 +43,11 @@ intercity.layer({
     return reply.rgb([band, band, 0]);   // intercity will do the rest
 });
 
-
 intercity.handle(intercity.wms, 'http://localhost:3000', '/wms');
+intercity.handle(intercity.wmts, 'http://localhost:3000', '/wmts');
 intercity.use(intercity.png);
 intercity.use(intercity.jpeg);
+intercity.use(intercity.wkss.GoogleCRS84Quad);
 
 intercity.listen(3000).catch(e => console.error(e));
 ```

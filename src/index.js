@@ -3,10 +3,13 @@ const fastify = require('fastify')({ logger: true });
 const gdal = require('gdal-async');
 
 const wms = require('./wms');
+const wmts = require('./wmts');
 const core = require('./core');
 const png = require('./png');
 const jpeg = require('./jpeg');
-const formats = require('./format').formats;
+const format = require('./format');
+const matrix = require('./tilematrix');
+const wkss = require('./wkss');
 
 async function listen(port) {
     try {
@@ -19,11 +22,14 @@ async function listen(port) {
 
 function handle(proto, base, path) {
     const handler = new proto(path, base);
-    fastify.get(path, handler.main.bind(handler));
+    handler.register(fastify);
 }
 
-function use(format) {
-    formats.push(format);
+function use(handler) {
+    if (handler instanceof format.Format)
+        format.formats.push(handler);
+    if (handler instanceof matrix.TileMatrix)
+        matrix.sets.push(handler);       
 }
 
 const layer = core.layer;
@@ -32,8 +38,9 @@ module.exports = {
     use,
     handle,
     listen,
-    formats,
     wms,
+    wmts,
     png,
-    jpeg
+    jpeg,
+    wkss
 };

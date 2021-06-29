@@ -5,7 +5,7 @@ const Format = require('./format').Format;
 let uid = 1;
 class JPEG extends Format {
     constructor() {
-        super('JPEG', 'image/jpeg');
+        super('JPEG', 'image/jpeg', 'jpeg');
     }
 
     async produce(ds) {

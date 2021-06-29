@@ -5,6 +5,7 @@ const fastify = require('fastify')({ logger: { level: 'debug' } });
 const semver = require('semver');
 
 const core = require('./core');
+const Protocol = require('./protocol');
 const Reply = require('./reply');
 const Request = require('./request');
 const formats = require('./format').formats;
@@ -20,12 +21,17 @@ const wmsAttrs = {
         'xsi:schemaLocation': 'http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd'
     }
 };
-class WMS {
+class WMS extends Protocol {
     constructor(path, base) {
+        super('WMS');
         this.path = path;
         this.base = base;
         this.url = `${base}${path}?`;
         this.defaultVersion = '1.3.0';
+    }
+
+    register(fastify) {
+        fastify.get(this.path, this.main.bind(this));
     }
 
     async main(request, reply) {
@@ -131,7 +137,9 @@ class WMS {
         }
         const width = +(getQueryParam(request.query, 'width', 512));
         const height = +(getQueryParam(request.query, 'height', 512));
-        const bbox = getQueryParam(request.query, 'bbox');
+        const queryBbox = getQueryParam(request.query, 'bbox');
+        const splitBbox = queryBbox.split(',');
+        const bbox = new gdal.Envelope({ minX: +splitBbox[0], minY: +splitBbox[1], maxX: +splitBbox[2], maxY: +splitBbox[3] });
         for (const l of core.layers) {
             if (layers.includes(l.name)) {
                 const srs = l.srs;

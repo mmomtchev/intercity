@@ -45,6 +45,7 @@ function unlayer(idx) {
 }
 
 module.exports = {
+    wgs84,
     updateSequence,
     layers,
     layer,
