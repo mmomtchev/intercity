@@ -20,11 +20,35 @@ intercity.layer({
 }, async (request, reply) => {
     const ds = await gdal.openAsync('temp', 'w', 'MEM', 128, 128, 1, gdal.GDT_CFloat32);
     const band = await ds.bands.getAsync(1);
-    const data = new Uint8Array(128 * 128);
+    const data = new Float32Array(128 * 128);
     for (let i = 0; i < data.length; i++)
         data[i] = Math.random() * 255;
-    await band.pixels.write(0, 0, 128, 128, data);
+    await band.pixels.writeAsync(0, 0, 128, 128, data);
     return reply.rgb([band, band, 0]);
+});
+
+intercity.layer({
+    name: 'stripes:yellow',
+    title: 'red horizontal and green vertical stripes 0.5° apart',
+    srs: gdal.SpatialReference.fromEPSG(4326),
+    bbox: { minX: -8, minY: 38, maxX: 12, maxY: 53 }
+}, async (request, reply) => {
+    const width = 12 + 8;
+    const height = 53 - 38;
+    const ds = await gdal.openAsync('temp', 'w', 'MEM', width, height, 2, gdal.Uint8Array);
+    const red = await ds.bands.getAsync(1);
+    const green = await ds.bands.getAsync(2);
+    const one = new Uint8Array(1);
+    const zero = new Uint8Array(1);
+    one[0] = 255;
+    zero[0] = 0;
+    for (let x = 0; x < width; x++)
+        await red.pixels.writeAsync(x, 0, 1, height,
+            x % 2 ? one : zero, { buffer_height: 1, buffer_width: 1 });
+    for (let y = 0; y < height; y++)
+        await green.pixels.writeAsync(0, y, width, 1,
+            y % 2 ? one : zero, { buffer_height: 1, buffer_width: 1 });
+    return reply.rgb([red, green, 0]);
 });
 
 const rain_ds = gdal.open('2-warped.tiff');
