@@ -26,6 +26,7 @@ const GoogleMapsCompatible = new TileMatrix('GoogleMapsCompatible', [
 
 
 const GoogleCRS84Quad = new TileMatrix('GoogleCRS84Quad', [
+    559082264.0287178,
     279541132.0143589,
     139770566.0071794,
     69885283.00358972,

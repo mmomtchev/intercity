@@ -23,8 +23,8 @@ class TileMatrix {
             const s = this.scales[si];
             // pixelSize is the pixel size in SRS coordinates
             const pixelSize = (s * 28e-5) / (equator / spanX);
-            const matrixWidth = Math.round(spanX / pixelSize / 256);
-            const matrixHeight = Math.round(spanY / pixelSize / 256);
+            const matrixWidth = Math.round(spanX / pixelSize / 256 + 0.001);
+            const matrixHeight = Math.round(spanY / pixelSize / 256 + 0.001);
             this.levels[si] = {
                 pixelSize, matrixWidth, matrixHeight
             };
@@ -34,10 +34,10 @@ class TileMatrix {
     tileEnvelope(zoom, col, row) {
         const level = this.levels[zoom];
         return new gdal.Envelope({
-            minX: col * level.pixelSize,
-            minY: row * level.pixelSize,
-            maxX: (col+1) * level.pixelSize,
-            maxY: (row+1) * level.pixelSize
+            minX: this.bbox.minX + col * 256 * level.pixelSize,
+            minY: this.bbox.maxY - row * 256 * level.pixelSize,
+            maxX: this.bbox.minX + (col+1) * 256 * level.pixelSize,
+            maxY: this.bbox.maxY - (row+1) * 256 * level.pixelSize
         });
     }
 };
