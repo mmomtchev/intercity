@@ -35,9 +35,9 @@ class TileMatrix {
         const level = this.levels[zoom];
         return new gdal.Envelope({
             minX: this.bbox.minX + col * 256 * level.pixelSize,
-            minY: this.bbox.maxY - row * 256 * level.pixelSize,
+            minY: this.bbox.maxY - (row+1) * 256 * level.pixelSize,
             maxX: this.bbox.minX + (col+1) * 256 * level.pixelSize,
-            maxY: this.bbox.maxY - (row+1) * 256 * level.pixelSize
+            maxY: this.bbox.maxY - row * 256 * level.pixelSize
         });
     }
 };
