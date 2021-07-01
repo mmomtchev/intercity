@@ -70,7 +70,7 @@ Reply.prototype[windowSymbol] = function(band) {
         band.ds.srs = this[layerSymbol].srs;
     }
     if (!band.ds.geoTransform) {
-        const bbox = this[requestSymbol].bbox;
+        const bbox = this[layerSymbol].bbox;
         band.ds.geoTransform = [
             bbox.minX, (bbox.maxX - bbox.minX) / band.ds.rasterSize.x, 0,
             bbox.maxY, 0, (bbox.minY - bbox.maxY) / band.ds.rasterSize.y];
