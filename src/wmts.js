@@ -60,10 +60,6 @@ class WMTS extends Protocol {
                         .ele('ows:LowerCorner').txt(`${llbb.minX} ${llbb.minY}`).up()
                         .ele('ows:UpperCorner').txt(`${llbb.maxX} ${llbb.maxY}`).up()
                     .up()
-                    /*.ele('ows:BoundingBox')
-                        .ele('ows:LowerCorner').txt(`${bb.minX} ${bb.minY}`).up()
-                        .ele('ows:UpperCorner').txt(`${bb.maxX} ${bb.maxY}`).up()
-                    .up()*/
                     .ele('Style')
                         .ele('ows:Title').txt(l.title).up()
                         .ele('ows:Identifier').txt(l.name).up()
@@ -115,14 +111,13 @@ class WMTS extends Protocol {
                 .ele('ows:Title').txt(m.name).up()
                 .ele('ows:SupportedCRS').txt(m.crs).up();
             if (m.urn) tileMatrixSet.ele('WellKnownScaleSet').txt(m.urn);
-            const xform = new gdal.CoordinateTransformation(core.wgs84, m.srs);
             for (const si in m.scales) {
                 const s = m.scales[si];
                 const l = m.levels[si];
                 tileMatrixSet.ele('TileMatrix')
                     .ele('ows:Identifier').txt(si).up()
                     .ele('ScaleDenominator').txt(s).up()
-                    .ele('TopLeftCorner').txt(`${m.ul.y} ${m.ul.x}`).up()
+                    .ele('TopLeftCorner').txt(m.orderedCoords([m.ul.x, m.ul.y]).join(' ')).up()
                     .ele('TileWidth').txt('256').up()
                     .ele('TileHeight').txt('256').up()
                     .ele('MatrixWidth').txt(l.matrixWidth).up()

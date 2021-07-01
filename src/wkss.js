@@ -45,7 +45,7 @@ const GoogleCRS84Quad = new TileMatrix('GoogleCRS84Quad', [
     8530.918335399136,
     4265.459167699568,
     2132.729583849784
-], 'urn:ogc:def:wkss:OGC:1.0:GoogleCRS84Quad', 'urn:ogc:def:crs:EPSG::4326',
+], 'urn:ogc:def:wkss:OGC:1.0:GoogleCRS84Quad', 'urn:ogc:def:crs:OGC:1.3:CRS84',
     new gdal.Envelope({ minX: -180, minY: -90, maxX: 180, maxY: 90 }));
 
 

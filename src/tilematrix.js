@@ -40,6 +40,13 @@ class TileMatrix {
             maxY: this.bbox.maxY - row * 256 * level.pixelSize
         });
     }
+
+    orderedCoords([x, y]) {
+        if (this.srs.EPSGTreatsAsLatLong())
+            return [y, x];
+        else
+            return [x, y];
+    }
 };
 
 const sets = [];
