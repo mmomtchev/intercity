@@ -27,7 +27,8 @@
   "dependencies": {
     "fastify": "^3.18.0",
     "gdal-async": "^3.3.1",
-    "semver": "^7.3.5"
+    "semver": "^7.3.5",
+    "xmlbuilder2": "^2.4.1"
   },
   "devDependencies": {
     "eslint": "^7.29.0",
