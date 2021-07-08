@@ -1,3 +1,5 @@
+'use strict';
+
 const gdal = require('gdal-async');
 
 const requestSymbol = Symbol('_request');

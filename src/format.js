@@ -1,3 +1,4 @@
+'use strict';
 class Format {
     constructor(name, mime, ext) {
         this.name = name;

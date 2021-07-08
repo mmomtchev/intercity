@@ -1,3 +1,5 @@
+'use strict';
+
 const gdal = require('gdal-async');
 const fs = require('fs');
 const Format = require('./format').Format;

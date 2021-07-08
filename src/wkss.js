@@ -1,3 +1,5 @@
+'use strict';
+
 const gdal = require('gdal-async');
 const TileMatrix = require('./tilematrix').TileMatrix;
 

@@ -1,3 +1,5 @@
+'use strict';
+
 class Protocol {
     constructor(name) {
         this.name = name;
