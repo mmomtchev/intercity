@@ -12,6 +12,7 @@ intercity.layer({
     const ds = gdal.openAsync('sample-warped.tif');
 });
 
+
 intercity.layer({
     name: 'random:yellow',
     title: 'random yellow',
@@ -35,7 +36,7 @@ intercity.layer({
 }, async (request, reply) => {
     const width = 12 + 8;
     const height = 53 - 38;
-    const ds = await gdal.openAsync('temp', 'w', 'MEM', width, height, 2, gdal.Uint8Array);
+    const ds = await gdal.openAsync('temp', 'w', 'MEM', width, height, 2, gdal.GDT_Byte);
     const red = await ds.bands.getAsync(1);
     const green = await ds.bands.getAsync(2);
     const one = new Uint8Array(1);
@@ -48,6 +49,26 @@ intercity.layer({
     for (let y = 0; y < height; y++)
         await green.pixels.writeAsync(0, y, width, 1,
             y % 2 ? one : zero, { buffer_height: 1, buffer_width: 1 });
+    return reply.rgb([red, green, 0]);
+});
+
+intercity.layer({
+    name: 'coords:lat_lon',
+    title: 'Latitude in red band and longitude in green band',
+    srs: gdal.SpatialReference.fromEPSG(4326),
+    bbox: { minX: -180, minY: -90, maxX: 180, maxY: 180 }
+}, async (request, reply) => {
+    const width = 360;
+    const height = 180;
+    const ds = await gdal.openAsync('temp', 'w', 'MEM', width, height, 2, gdal.GDT_CFloat32);
+    const red = await ds.bands.getAsync(1);
+    const green = await ds.bands.getAsync(2);
+    for (let x = 0; x < width; x++)
+        for (let y = 0; y < height; y++)
+            await red.pixels.setAsync(x, y, y);
+    for (let x = 0; x < width; x++)
+        for (let y = 0; y < height; y++)
+            await green.pixels.setAsync(x, y, x);
     return reply.rgb([red, green, 0]);
 });
 
