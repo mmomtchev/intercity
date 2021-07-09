@@ -12,7 +12,6 @@ intercity.layer({
     const ds = gdal.openAsync('sample-warped.tif');
 });
 
-
 intercity.layer({
     name: 'random:yellow',
     title: 'random yellow',
@@ -37,7 +36,8 @@ intercity.layer({
     const width = 12 + 8;
     const height = 53 - 38;
     const ds = await gdal.openAsync('temp', 'w', 'MEM', width, height, 2, gdal.GDT_Byte);
-    const red = await ds.bands.getAsync(1);
+    const red = await ds.b
+    ands.getAsync(1);
     const green = await ds.bands.getAsync(2);
     const one = new Uint8Array(1);
     const zero = new Uint8Array(1);
