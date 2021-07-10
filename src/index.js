@@ -28,8 +28,12 @@ function handle(proto, base, path) {
 function use(handler) {
     if (handler instanceof format.Format)
         format.formats.push(handler);
-    if (handler instanceof matrix.TileMatrix)
-        matrix.sets.push(handler);       
+    else if (handler instanceof matrix.TileMatrix)
+        matrix.sets.push(handler);
+    else if (handler instanceof gdal.SpatialReference)
+        core.srsAdd(handler);
+    else
+        throw new TypeError('Unsupported handler type');
 }
 
 const layer = core.layer;

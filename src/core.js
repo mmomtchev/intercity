@@ -6,6 +6,13 @@ const wgs84 = gdal.SpatialReference.fromEPSG(4326);
 
 let updateSequence = 1;
 
+function epsg(srs) {
+    srs.autoIdentifyEPSG();
+    if (srs.getAuthorityName() !== 'EPSG')
+        throw new Error('Only EPSG projections are supported at the moment');
+    return srs.getAuthorityCode();
+}
+
 class Layer {
     constructor(_opts) {
         const opts = _opts || {};
@@ -14,10 +21,7 @@ class Layer {
         this.title = opts.title;
         this.handler = opts.handler;
         this.srs = opts.srs;
-        this.srs.autoIdentifyEPSG();
-        if (this.srs.getAuthorityName() !== 'EPSG')
-            throw new Error('Only EPSG projections are supported at the moment');
-        this.epsg = this.srs.getAuthorityCode();
+        this.epsg = epsg(this.srs);
         this.xform = new gdal.CoordinateTransformation(this.srs, wgs84);
         const ul = this.xform.transformPoint(this.bbox.minX, this.bbox.minY);
         const lr = this.xform.transformPoint(this.bbox.maxX, this.bbox.maxY);
@@ -31,16 +35,23 @@ class Layer {
 }
 
 const layers = [];
+const srs = [];
+
+function srsAdd(s) {
+    epsg(s);
+    srs.push(s);
+}
 
 function layer(opts, handler) {
     const l = new Layer({...opts, handler});
-    fastify.log.debug(`layer> create ${l}`);
+    fastify.log.debug(`layer> create ${l.name}`);
     updateSequence++;
     return layers.push(l) - 1;
 }
 
 function unlayer(idx) {
     updateSequence++;
+    fastify.log.debug(`layer> remove ${l.name}`);
     layers.splice(idx, 1);
 }
 
@@ -48,6 +59,8 @@ module.exports = {
     wgs84,
     updateSequence,
     layers,
+    srs,
     layer,
-    unlayer
+    unlayer,
+    srsAdd
 };

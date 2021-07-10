@@ -1,5 +1,6 @@
 'use strict';
 
+const gdal = require('gdal-async');
 const { create, fragment } = require('xmlbuilder2');
 const fastify = require('fastify')({ logger: { level: 'debug' } });
 const semver = require('semver');
@@ -36,7 +37,7 @@ class WMS extends Protocol {
 
     async main(request, reply) {
         const service = getQueryParam(request.query, 'service', 'WMS');
-        if (service !== 'WMS')
+        if (service.toUpperCase() !== 'WMS')
             throw new Error(`Invalid service ${service}, only WMS supported`);
         let version = getQueryParam(request.query, 'version', this.defaultVersion);
         if (semver.gt(version, '1.3.0'))
@@ -65,11 +66,13 @@ class WMS extends Protocol {
                 .ele('Layer')
                 .ele('Name').txt(l.name).up()
                 .ele('Title').txt(l.title).up()
-                .ele('SRS').txt(`EPSG:${l.epsg}`).up()
+                .ele('CRS').txt(`EPSG:${l.epsg}`).up()
+                .import(this.wmsSRS(l))
                 .ele('LatLonBoundingBox', { minx: bb.minX, miny: bb.minY, maxx: bb.maxX, maxy: bb.maxY }).up()
                 .ele('BoundingBox', { SRS: `EPSG:${l.epsg}`, minx: llbb.minX, miny: llbb.minY, maxx: llbb.maxX, maxy: llbb.maxY }).up()
                 .up()
                 .up();
+            layers;
         }
         return layers.up();
     }
@@ -78,6 +81,15 @@ class WMS extends Protocol {
         const list = fragment();
         for (const f of formats) {
             list.ele('Format').txt(f.mime);
+        }
+        return list;
+    }
+
+    wmsSRS(layer) {
+        const list = fragment();
+        for (const srs of core.srs) {
+            if (srs.isSame(layer.srs)) continue;
+            list.ele('CRS').txt(`EPSG:${srs.getAuthorityCode()}`);
         }
         return list;
     }
@@ -127,6 +139,7 @@ class WMS extends Protocol {
         if (typeof layersString !== 'string') throw new Error('LAYERS must be a list of string');
         const layers = layersString.split(',');
         fastify.log.debug(`WMS> GetMap ${layers}`);
+
         let format;
         const queryFormat = getQueryParam(request.query, 'format');
         if (queryFormat) {
@@ -135,6 +148,10 @@ class WMS extends Protocol {
         } else {
             format = formats[0];
         }
+
+        const querySRS = getQueryParam(request.query, 'srs') || getQueryParam(request.query, 'crs');
+        const srs = gdal.SpatialReference.fromUserInput(querySRS);
+
         const width = +(getQueryParam(request.query, 'width', 512));
         const height = +(getQueryParam(request.query, 'height', 512));
         const queryBbox = getQueryParam(request.query, 'bbox');
@@ -142,8 +159,13 @@ class WMS extends Protocol {
         const bbox = new gdal.Envelope({ minX: +splitBbox[0], minY: +splitBbox[1], maxX: +splitBbox[2], maxY: +splitBbox[3] });
         for (const l of core.layers) {
             if (layers.includes(l.name)) {
-                const srs = l.srs;
-                const mapRequest = new Request(request, l, srs, bbox, format, width, height);
+                let reqSRS = l.srs;
+                if (!srs.isSame(l.srs)) {
+                    reqSRS = core.srs.find((x) => srs.isSame(srs));
+                    if (!reqSRS) throw new Error(`Unsupported CRS ${querySRS}`);
+                }
+
+                const mapRequest = new Request(request, l, reqSRS, bbox, format, width, height);
                 fastify.log.debug(`WMS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`);
                 return l.handler(mapRequest, new Reply(mapRequest, reply, l));
             }

@@ -23,22 +23,18 @@ class Reply {
     }
 
     async grayscale(gray) {   
-        if (gray instanceof gdal.RasterBand) await this[prepareSymbol](gray.ds);
+        gray = await this[prepareSymbol](gray);
         const response = await gdal.openAsync('temp', 'w', 'MEM', this.width, this.height, 1, gdal.GDT_Byte);
-        await this[bandSymbol](response.bands.getAsync(1), gray);
+        await this[bandSymbol](response.bands.getAsync(1), gray.bands.getAsync(1));
         return this[respondSymbol](response);
     }
 
     async rgb(rgb) {
-        const prepare = [];
-        for (let i = 0; i < 3; i++) {
-            if (rgb[i] instanceof gdal.RasterBand) prepare.push(this[prepareSymbol](rgb[i].ds));
-        }
-        await Promise.all(prepare);
+        rgb = await this[prepareSymbol](rgb);
         const response = await gdal.openAsync('temp', 'w', 'MEM', this.width, this.height, 3, gdal.GDT_Byte);
         const bands = [];
-        for (let i = 0; i < 3; i++) {
-            bands[i] = this[bandSymbol](response.bands.getAsync(i + 1), rgb[i]);
+        for (let i = 1; i <= 3; i++) {
+            bands[i] = this[bandSymbol](rgb.bands.getAsync(i), response.bands.getAsync(i));
         }
         await Promise.all(bands);
         return this[respondSymbol](response);
@@ -63,43 +59,67 @@ Reply.prototype[prepareSymbol] = async function(ds) {
             }
         }
     });
-    
-    if (!(await ds.srsAsync) || !(await ds.srsAsync).isSame(this[layerSymbol].srs))
+
+    const s_srs = await ds.srsAsync;
+    if (!s_srs.isSame(this[layerSymbol].srs)) {
         throw new Error('Band SRS must match the main SRS of the served layer');
+    }
+
+    if (!s_srs.isSame(this[requestSymbol].srs)) {
+        // This will be in the cache once the cache is implemented
+        const warpOutput = await gdal.suggestedWarpOutputAsync({
+            src: ds,
+            s_srs: s_srs,
+            t_srs: this[requestSymbol].srs
+        });
+
+        const warped = await gdal.openAsync('temp', 'w', 'MEM',
+                warpOutput.rasterSize.x, warpOutput.rasterSize.y,
+                await ds.bands.countAsync(), gdal.GDT_Int16);
+
+        warped.geoTransform = warpOutput.geoTransform;
+        warped.srs = this[requestSymbol].srs;
+        await gdal.reprojectImageAsync({
+            src: ds,
+            dst: warped,
+            s_srs: s_srs,
+            t_srs: this[requestSymbol].srs,
+            resampling: gdal.GRA_Bilinear,
+            blend: 0
+        });
+
+        return warped;
+    }
+
+    return ds;
 }
 
-Reply.prototype[bandSymbol] = async function(dstq, data) {
-    if (typeof data === 'number') {
-        const band = await dstq;
-        await band.fillAsync(data);
-    } else if (typeof data === 'object' && data instanceof gdal.RasterBand) {
-        const {windowSrc, windowDst} = await this[windowSymbol](data);
-        fastify.log.debug(`reply> reading zone from band ${JSON.stringify(windowSrc)} to ${JSON.stringify(windowDst)}`);
-        const buffer = new Uint8Array((windowDst.maxX - windowDst.minX + 1) * (windowDst.maxY - windowDst.minY + 1));
-        const [array, band] = await Promise.all([
-            data.pixels.readAsync(windowSrc.minX, windowSrc.minY,
-                windowSrc.maxX - windowSrc.minX, windowSrc.maxY - windowSrc.minY,
-                buffer, {
-                    data_type: gdal.GDT_Byte,
-                    buffer_width: windowDst.maxX - windowDst.minX + 1,
-                    buffer_height: windowDst.maxY - windowDst.minY + 1
-                }
-            ),
-            dstq
-        ]);
+Reply.prototype[bandSymbol] = async function(srcBandq, dstBandq) {
+    const srcBand = await srcBandq;
+    const {windowSrc, windowDst} = await this[windowSymbol](srcBand);
+    fastify.log.debug(`reply> reading zone from band ${JSON.stringify(windowSrc)} to ${JSON.stringify(windowDst)}`);
+    const buffer = new Uint8Array((windowDst.maxX - windowDst.minX + 1) * (windowDst.maxY - windowDst.minY + 1));
+    const [array, dstBand] = await Promise.all([
+        srcBand.pixels.readAsync(windowSrc.minX, windowSrc.minY,
+            windowSrc.maxX - windowSrc.minX, windowSrc.maxY - windowSrc.minY,
+            buffer, {
+                data_type: gdal.GDT_Byte,
+                buffer_width: windowDst.maxX - windowDst.minX + 1,
+                buffer_height: windowDst.maxY - windowDst.minY + 1
+            }
+        ),
+        dstBandq
+    ]);
 
-        const scale = data.scale;
-        const offset = data.offset;
-        if (scale != 1.0 || offset != 0)
-            for (let i = 0; i < array.length; i++) array[i] = array[i] * scale + offset;
-        return band.pixels.writeAsync(windowDst.minX,
-                                        windowDst.minY,
-                                        windowDst.maxX - windowDst.minX + 1,
-                                        windowDst.maxY - windowDst.minY + 1,
-                                        array);
-    } else {
-        throw new Error(`Unsupported data type ${band}`);
-    }
+    const scale = srcBand.scale;
+    const offset = srcBand.offset;
+    if (scale != 1.0 || offset != 0)
+        for (let i = 0; i < array.length; i++) array[i] = array[i] * scale + offset;
+    return dstBand.pixels.writeAsync(windowDst.minX,
+                                    windowDst.minY,
+                                    windowDst.maxX - windowDst.minX + 1,
+                                    windowDst.maxY - windowDst.minY + 1,
+                                    array);
 }
 
 Reply.prototype[windowSymbol] = async function(band) {
