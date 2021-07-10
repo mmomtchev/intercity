@@ -84,7 +84,7 @@ Reply.prototype[prepareSymbol] = async function(ds) {
             dst: warped,
             s_srs: s_srs,
             t_srs: this[requestSymbol].srs,
-            resampling: gdal.GRA_Bilinear,
+            resampling: gdal.GRA_NearestNeighbor,
             blend: 0
         });
 
