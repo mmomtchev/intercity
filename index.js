@@ -25,7 +25,7 @@ intercity.layer({
     await (await ds.bands.getAsync(1)).pixels.writeAsync(0, 0, 128, 128, data);
     await (await ds.bands.getAsync(2)).pixels.writeAsync(0, 0, 128, 128, data);
     await (await ds.bands.getAsync(3)).fillAsync(0);
-    return reply.rgb(ds);
+    return reply.send(ds);
 });
 
 intercity.layer({
@@ -51,14 +51,14 @@ intercity.layer({
         await green.pixels.writeAsync(0, y, width, 1,
             y % 2 ? one : zero, { buffer_height: 1, buffer_width: 1 });
     await blue.fillAsync(0);
-    return reply.rgb(ds);
+    return reply.send(ds);
 });
 
 intercity.layer({
     name: 'coords:lat_lon',
     title: 'Latitude in red band and longitude in green band',
     srs: gdal.SpatialReference.fromEPSG(4326),
-    bbox: { minX: -180, minY: -90, maxX: 180, maxY: 180 }
+    bbox: { minX: -90, minY: -180, maxX: 90, maxY: 180 }
 }, async (request, reply) => {
     const width = 360;
     const height = 180;
@@ -66,20 +66,23 @@ intercity.layer({
     const red = await ds.bands.getAsync(1);
     const green = await ds.bands.getAsync(2);
     const blue = await ds.bands.getAsync(3);
-    for (let x = 0; x < width; x++)
-        for (let y = 0; y < height; y++)
-            await red.pixels.setAsync(x, y, y);
-    for (let x = 0; x < width; x++)
-        for (let y = 0; y < height; y++)
-            await green.pixels.setAsync(x, y, x);
+    const data = new Uint8Array(1);
+    for (let y = 0; y < height; y++) {
+        data[0] = y;
+        await red.pixels.writeAsync(0, y, width, 1, data, { buffer_height: 1, buffer_width: 1 });
+    }
+    for (let x = 0; x < width; x++) {
+        data[0] = x;
+        await green.pixels.writeAsync(x, 0, 1, height, data, { buffer_height: 1, buffer_width: 1 });
+    }
     await blue.fillAsync(0);
-    return reply.rgb(ds);
+    return reply.send(ds);
 });
 
 const rain_ds = gdal.open('2-warped.tiff');
 const rain_band = rain_ds.bands.get(1);
 const rain_blue_ds = gdal.open('temp', 'w', 'MEM',
-                            rain_ds.rasterSize.x, rain_ds.rasterSize.y, 3, gdal.GDT_Byte);
+    rain_ds.rasterSize.x, rain_ds.rasterSize.y, 3, gdal.GDT_Byte);
 rain_blue_ds.bands.get(1).fill(0);
 rain_blue_ds.bands.get(2).fill(0);
 rain_blue_ds.bands.get(3).pixels.write(0, 0, rain_ds.rasterSize.x, rain_ds.rasterSize.y,
