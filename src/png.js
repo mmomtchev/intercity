@@ -12,7 +12,7 @@ class PNG extends Format {
     async produce(ds) {
         const pngDriver = gdal.drivers.get('PNG');
         const tmpName = `/vsimem/${uid++}.png`;
-        await pngDriver.createCopyAsync(tmpName, ds)
+        (await pngDriver.createCopyAsync(tmpName, ds)).close();
         const raw = gdal.vsimem.release(tmpName);
         return raw;
     }
