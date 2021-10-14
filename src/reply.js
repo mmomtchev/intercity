@@ -13,6 +13,13 @@ const prepareSymbol = Symbol('_prepare');
 const bandSymbol = Symbol('_band');
 const respondSymbol = Symbol('_respond');
 
+function bbox2geo(bbox, rasterSize) {
+    return [
+        bbox.minX, (bbox.maxX - bbox.minX) / rasterSize.x, 0,
+        bbox.maxY, 0, (bbox.minY - bbox.maxY) / rasterSize.y
+    ];
+}
+
 class Reply {
     constructor(request, reply, layer) {
         this[replySymbol] = reply;
@@ -22,74 +29,21 @@ class Reply {
         this.height = this[requestSymbol].height;
     }
 
-    async grayscale(gray) {   
-        gray = await this[prepareSymbol](gray);
-        const response = await gdal.openAsync('temp', 'w', 'MEM', this.width, this.height, 1, gdal.GDT_Byte);
-        await this[bandSymbol](response.bands.getAsync(1), gray.bands.getAsync(1));
-        return this[respondSymbol](response);
-    }
-
-    async rgb(rgb) {
-        rgb = await this[prepareSymbol](rgb);
-        const response = await gdal.openAsync('temp', 'w', 'MEM', this.width, this.height, 3, gdal.GDT_Byte);
-        const bands = [];
-        for (let i = 1; i <= 3; i++) {
-            bands[i] = this[bandSymbol](rgb.bands.getAsync(i), response.bands.getAsync(i));
-        }
-        await Promise.all(bands);
-        return this[respondSymbol](response);
+    async send(ds) {
+        return this[respondSymbol](ds);
     }
 }
 
 Reply.prototype[prepareSymbol] = async function(ds) {
     if (!ds.lock) ds.lock = new AsyncLock();
     await ds.lock.acquire('srs', async () => {
-        if (!await ds.srsAsync) {
-            if (!ds.srs) ds.srs = this[layerSymbol].srs;
-        }
+        if (!await ds.srsAsync) ds.srs = this[layerSymbol].srs;
     });
     await ds.lock.acquire('geo', async () => {
         if (!await ds.geoTransformAsync) {
-            if (!ds.geoTransform) {
-                const bbox = this[layerSymbol].bbox;
-                ds.geoTransform = [
-                    bbox.minX, (bbox.maxX - bbox.minX) / ds.rasterSize.x, 0,
-                    bbox.maxY, 0, (bbox.minY - bbox.maxY) / ds.rasterSize.y
-                ];
-            }
+            ds.geoTransform = bbox2geo(this[layerSymbol].bbox, ds.rasterSize);
         }
     });
-
-    const s_srs = await ds.srsAsync;
-    if (!s_srs.isSame(this[layerSymbol].srs)) {
-        throw new Error('Band SRS must match the main SRS of the served layer');
-    }
-
-    if (!s_srs.isSame(this[requestSymbol].srs)) {
-        // This will be in the cache once the cache is implemented
-        const warpOutput = await gdal.suggestedWarpOutputAsync({
-            src: ds,
-            s_srs: s_srs,
-            t_srs: this[requestSymbol].srs
-        });
-
-        const warped = await gdal.openAsync('temp', 'w', 'MEM',
-                warpOutput.rasterSize.x, warpOutput.rasterSize.y,
-                await ds.bands.countAsync(), gdal.GDT_Int16);
-
-        warped.geoTransform = warpOutput.geoTransform;
-        warped.srs = this[requestSymbol].srs;
-        await gdal.reprojectImageAsync({
-            src: ds,
-            dst: warped,
-            s_srs: s_srs,
-            t_srs: this[requestSymbol].srs,
-            resampling: gdal.GRA_NearestNeighbor,
-            blend: 0
-        });
-
-        return warped;
-    }
 
     return ds;
 }
@@ -164,8 +118,17 @@ Reply.prototype[windowSymbol] = async function(band) {
 
 Reply.prototype[respondSymbol] = async function(ds) {
     await ds.flushAsync();
+    await this[prepareSymbol](ds);
+    const response = await gdal.openAsync('temp', 'w', 'MEM',
+            this.width, this.height, await ds.bands.countAsync(), gdal.GDT_Byte);
+
+    response.srs = this[requestSymbol].srs;
+    response.geoTransform = bbox2geo(this[requestSymbol].bbox, response.rasterSize);
+
+    await gdal.reprojectImageAsync({src: ds, s_srs: ds.srs, dst: response, t_srs: response.srs});
+
     this[replySymbol].type(this[requestSymbol].format.mime);
-    const raw = await this[requestSymbol].format.produce(ds);
+    const raw = await this[requestSymbol].format.produce(response);
     this[replySymbol].send(raw);
 }
 

@@ -12,7 +12,7 @@ class JPEG extends Format {
     async produce(ds) {
         const jpegDriver = gdal.drivers.get('JPEG');
         const tmpName = `/vsimem/${uid++}.jpeg`;
-        await jpegDriver.createCopyAsync(tmpName, ds)
+        (await jpegDriver.createCopyAsync(tmpName, ds)).close();
         const raw = gdal.vsimem.release(tmpName);
         return raw;
     }
