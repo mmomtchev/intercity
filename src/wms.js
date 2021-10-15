@@ -155,8 +155,11 @@ class WMS extends Protocol {
         const width = +(getQueryParam(request.query, 'width', 512));
         const height = +(getQueryParam(request.query, 'height', 512));
         const queryBbox = getQueryParam(request.query, 'bbox');
+        if (!queryBbox) throw new Error('"BBOX" is mandatory in WMS"');
         const splitBbox = queryBbox.split(',');
+        if (splitBbox.length != 4) throw new Error('"Malformed "BBOX"');
         const bbox = new gdal.Envelope({ minX: +splitBbox[0], minY: +splitBbox[1], maxX: +splitBbox[2], maxY: +splitBbox[3] });
+
         for (const l of core.layers) {
             if (layers.includes(l.name)) {
                 let reqSRS = l.srs;
