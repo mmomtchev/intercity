@@ -30,9 +30,9 @@ intercity.layer({
 
 intercity.layer({
     name: 'stripes:yellow',
-    title: 'red horizontal and green vertical stripes 0.5° apart',
+    title: 'red horizontal and green vertical stripes 1° apart',
     srs: gdal.SpatialReference.fromEPSG(4326),
-    bbox: { minX: 38, minY: -8, maxX: 53, maxY: 12 }
+    bbox: { minX: -8, minY: 38, maxX: 12, maxY: 53 }
 }, async (request, reply) => {
     const width = 12 + 8;
     const height = 53 - 38;
