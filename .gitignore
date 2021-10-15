@@ -6,3 +6,4 @@ package-lock.json
 *.jpeg
 *.aux.xml
 gdalwmscache
+!test/data/*.png
