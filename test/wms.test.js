@@ -65,25 +65,23 @@ describe('WMS', () => {
         });
         describe('gdalinfo', () => {
             it('should open the root URL and report the subdatasets', () => {
-                const wms = gdal.drivers.get('WMS');
                 // All GDAL calls that call the backend must be async
                 // mocha and the backend are running in the same V8 isolate
                 return wms.openAsync(testRoot + wmsServiceCaps).then((ds) => {
                     const info = JSON.parse(gdal.info(ds, ['-json']));
                     expect(info.driverShortName).to.equal('WMS');
                     expect(info.metadata.SUBDATASETS.SUBDATASET_1_NAME).to.include(
-                        'WMS:http://localhost:8998/wms'
+                        `WMS:${testRoot}/wms`
                     );
                 });
             });
 
             it('should open the root URL and report valid subdatasets', () => {
-                const wms = gdal.drivers.get('WMS');
                 return wms.openAsync(testRoot + wmsServiceCaps).then((ds) => {
                     const info = JSON.parse(gdal.info(ds, ['-json']));
                     expect(info.driverShortName).equal('WMS');
                     expect(info.metadata.SUBDATASETS.SUBDATASET_1_NAME).to.include(
-                        'WMS:http://localhost:8998/wms'
+                        `WMS:${testRoot}/wms`
                     );
                     const subName = Object.keys(info.metadata.SUBDATASETS).find((sub) =>
                         info.metadata.SUBDATASETS[sub].match('LAYERS=stripes%3Ayellow')
