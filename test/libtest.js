@@ -34,7 +34,7 @@ function matchPNGtoDS(ds, png, fuzzyness) {
     const data = gdal.vsimem.release(vsifile);
     const actual = PNG.sync.read(data);
     const expected = PNG.sync.read(fs.readFileSync(path.join(__dirname, 'data', png)));
-    expect(pixelmatch(actual.data, expected.data, null, size, size)).to.below(fuzzyness);
+    expect(pixelmatch(actual.data, expected.data, null, size, size)).to.lessThanOrEqual(fuzzyness);
 }
 
 function projBox(sproj, tproj, coords) {

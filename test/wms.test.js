@@ -13,6 +13,7 @@ describe('WMS', () => {
     const wmsServiceCaps = wmsService + '&REQUEST=GetCapabilities';
     const wmsServiceGetMap = wmsService + '&REQUEST=GetMap';
     const layerYellowStripes = wmsServiceGetMap + '&LAYERS=stripes%3Ayellow';
+    const layerYellowStripesPNG = layerYellowStripes + '&format=image/png';
 
     describe('GetCapabilities', () => {
         it('should return a valid response', () =>
@@ -29,7 +30,7 @@ describe('WMS', () => {
             'should support a default request',
             matchPNGtoURL(
                 testRoot,
-                layerYellowStripes + '&SRS=EPSG:4326&format=image/png&BBOX=-1,43,1,45',
+                layerYellowStripesPNG + '&SRS=EPSG:4326&BBOX=-1,43,1,45',
                 'wms_default.png',
                 512
             )
@@ -38,8 +39,7 @@ describe('WMS', () => {
         it('should support width & height', () =>
             matchPNGtoURL(
                 testRoot,
-                layerYellowStripes +
-                    '&SRS=EPSG:4326&format=image/png&BBOX=-1,43,1,45&width=256&height=256',
+                layerYellowStripesPNG + '&SRS=EPSG:4326&BBOX=-1,43,1,45&width=256&height=256',
                 'wms_tilesize.png',
                 256
             ));
@@ -49,7 +49,7 @@ describe('WMS', () => {
             'should support reprojection',
             matchPNGtoURL(
                 testRoot,
-                layerYellowStripes + `&SRS=EPSG:3857&format=image/png&BBOX=${bbox3857}`,
+                layerYellowStripesPNG + `&SRS=EPSG:3857&BBOX=${bbox3857}`,
                 'wms_3857.png',
                 512
             )
@@ -107,21 +107,40 @@ describe('WMS', () => {
 
         describe('gdal_translate', () => {
             const filename = '/vsimem/WMS_default_translate.png';
-            it('should produce (almost) identical results to a direct HTTP call', () =>
-                wms.openAsync(testRoot + layerYellowStripes).then((ds) =>
-                    gdal
-                        .translateAsync(filename, ds, [
-                            '-outsize',
-                            '512',
-                            '512',
-                            '-projwin',
-                            '-1',
-                            '45',
-                            '1',
-                            '43'
-                        ])
-                        .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 2000))
-                ));
+            it('should produce identical results to a direct HTTP call w/png', () =>
+                wms
+                    .openAsync(testRoot + layerYellowStripesPNG)
+                    .then((ds) =>
+                        gdal
+                            .translateAsync(filename, ds, [
+                                '-outsize',
+                                '512',
+                                '512',
+                                '-projwin',
+                                '-1',
+                                '45',
+                                '1',
+                                '43'
+                            ])
+                            .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 0))
+                    ));
+            it('should produce (almost) identical results to a direct HTTP call w/jpeg', () =>
+                wms
+                    .openAsync(testRoot + layerYellowStripes + '&format=image/jpeg')
+                    .then((ds) =>
+                        gdal
+                            .translateAsync(filename, ds, [
+                                '-outsize',
+                                '512',
+                                '512',
+                                '-projwin',
+                                '-1',
+                                '45',
+                                '1',
+                                '43'
+                            ])
+                            .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 2000))
+                    ));
         });
     });
 });
