@@ -55,7 +55,7 @@ function layer(opts, handler) {
 
 function unlayer(idx) {
     updateSequence++;
-    fastify.log.debug(`layer> remove ${l.name}`);
+    fastify.log.debug(`layer> remove ${layers[idx].name}`);
     layers.splice(idx, 1);
 }
 

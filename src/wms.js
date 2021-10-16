@@ -163,7 +163,7 @@ class WMS extends Protocol {
             if (layers.includes(l.name)) {
                 let reqSRS = l.srs;
                 if (!srs.isSame(l.srs)) {
-                    reqSRS = core.srs.find((x) => srs.isSame(srs));
+                    reqSRS = core.srs.find((x) => srs.isSame(x));
                     if (!reqSRS) throw new Error(`Unsupported CRS ${querySRS}`);
                 }
 

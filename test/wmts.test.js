@@ -3,7 +3,7 @@ const expect = chai.expect;
 const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 
-const { testRoot, matchPNGtoURL, projBox } = require('./libtest');
+const { testRoot, matchPNGtoURL } = require('./libtest');
 
 describe('WMS', () => {
     describe('GetCapabilities', () => {

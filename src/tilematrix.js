@@ -49,7 +49,7 @@ class TileMatrix {
         else
             return [x, y];
     }
-};
+}
 
 const sets = [];
 

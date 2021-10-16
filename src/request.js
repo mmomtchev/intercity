@@ -1,7 +1,5 @@
 'use strict';
 
-const gdal = require('gdal-async');
-
 const requestSymbol = Symbol('_request');
 const layerSymbol = Symbol('_layer');
 class Request {

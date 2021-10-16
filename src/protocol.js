@@ -12,6 +12,6 @@ class Protocol {
     async main() {
         throw new Error('Protocol is an abstract class');
     }
-};
+}
 
 module.exports = Protocol;

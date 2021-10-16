@@ -6,10 +6,10 @@ class Format {
         this.ext = ext;
     }
 
-    produce(ds) {
+    produce() {
         throw new Error('Format is an abstract class');
     }
-};
+}
 
 const formats = [];
 

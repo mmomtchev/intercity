@@ -4,8 +4,8 @@
   "description": "An Express.js-like WMS/WMTS server",
   "main": "index.js",
   "scripts": {
-    "dev": "node src/index.js",
     "test": "mocha",
+    "lint": "eslint src/*.js test/*.js",
     "codecov": "curl -s https://codecov.io/bash | bash",
     "c8": "npx c8 node --experimental-specifier-resolution=node --no-warnings node_modules/mocha/lib/cli/cli.js",
     "lcov": "npx c8 report --reporter=text-lcov > coverage/tests.lcov"
@@ -38,11 +38,15 @@
     "c8": "^7.10.0",
     "chai": "^4.3.4",
     "chai-http": "^4.3.0",
-    "eslint": "^7.29.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-array-func": "^3.1.7",
+    "eslint-plugin-mocha": "^9.0.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
     "mocha": "^9.1.3",
     "nodemon": "^2.0.7",
     "pixelmatch": "^5.2.1",
     "pngjs": "^6.0.0",
+    "prettier": "^2.4.1",
     "proj4": "^2.7.5"
   }
 }
