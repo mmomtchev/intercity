@@ -1,7 +1,6 @@
 'use strict';
 
 const gdal = require('gdal-async');
-const fs = require('fs');
 const AsyncLock = require('async-lock');
 
 const requestSymbol = Symbol('_request');
@@ -21,9 +20,10 @@ function geoTransform(xy, geo) {
     return {
         x: geo[0] + xy.x * geo[1] + xy.y * geo[2],
         y: geo[3] + xy.x * geo[4] + xy.y * geo[5]
-    }
+    };
 }
 
+// eslint-disable-next-line no-unused-vars
 function geoTransformReverse(xy, geo) {
     const determinate = geo[1] * geo[5] - geo[2] * geo[4];
     const inverse = 1 / determinate;
@@ -38,6 +38,7 @@ function geoTransformReverse(xy, geo) {
     return geoTransform(xy, inverseGeo);
 }
 
+// eslint-disable-next-line no-unused-vars
 function geo2bbox(geo, size) {
     const ul = geoTransform({ x: 0, y: 0 }, geo);
     const lr = geoTransform({ x: size.x, y: size.y }, geo);
@@ -75,7 +76,7 @@ Reply.prototype[prepareSymbol] = async function (ds) {
     });
 
     return ds;
-}
+};
 
 Reply.prototype[respondSymbol] = async function (ds) {
     await ds.flushAsync();
@@ -91,6 +92,6 @@ Reply.prototype[respondSymbol] = async function (ds) {
     this[replySymbol].type(this[requestSymbol].format.mime);
     const raw = await this[requestSymbol].format.produce(response);
     this[replySymbol].send(raw);
-}
+};
 
 module.exports = Reply;

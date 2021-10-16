@@ -13,6 +13,7 @@
     "prefer-arrow"
   ],
   "rules": {
+    "semi": 2,
     "mocha/no-exclusive-tests": "error"
   },
   "parserOptions": {

@@ -110,4 +110,4 @@ module.exports = function (port) {
     intercity.listen(port).catch(e => console.error(e));
 
     return intercity;
-}
+};

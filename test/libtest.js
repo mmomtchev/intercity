@@ -4,7 +4,7 @@ const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
 const { PNG } = require('pngjs');
 const pixelmatch = require('pixelmatch');
 const proj4 = require('proj4');
@@ -21,7 +21,7 @@ function matchPNGtoURL(base, url, png, size) {
             expect(actual.height).to.equal(size);
             const expected = PNG.sync.read(fs.readFileSync(path.join(__dirname, 'data', png)));
             expect(pixelmatch(actual.data, expected.data, null, size, size)).below(1);
-        })
+        });
 }
 
 function projBox(sproj, tproj, coords) {

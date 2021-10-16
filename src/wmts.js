@@ -9,7 +9,6 @@ const Reply = require('./reply');
 const Request = require('./request');
 const formats = require('./format').formats;
 const matrixSets = require('./tilematrix').sets;
-const wkss = require('./wkss');
 const { getQueryParam } = require('./utils');
 
 class WMTS extends Protocol {
@@ -49,7 +48,6 @@ class WMTS extends Protocol {
         const layers = fragment();
         for (const l of core.layers) {
             const llbb = l.latlonbbox;
-            const bb = l.bbox;
             layers
                 .ele('Layer')
                     .ele('ows:Title').txt(l.title).up()
@@ -65,7 +63,7 @@ class WMTS extends Protocol {
                     .import(this.formats())
                     .import(this.tileMatrixLinks(l))
                     .import(this.urls(l))
-                .up()
+                .up();
         }
         return layers;
     }
