@@ -9,8 +9,29 @@ Built upon `gdal-async` and `fastify`
 [![Node.js CI](https://github.com/mmomtchev/intercity/actions/workflows/node.js.yml/badge.svg)](https://github.com/mmomtchev/intercity/actions/workflows/node.js.yml)
 [![codecov](https://codecov.io/gh/mmomtchev/intercity/branch/master/graph/badge.svg?token=08HS1KXSW9)](https://codecov.io/gh/mmomtchev/intercity)
 
+# Intercity.js vs Geoserver
+
+| | Geoserver | Intercity.js |
+| --- | --- | --- |
+| Role | Geospatial server | Geospatial middleware
+| Target audience | System administrators | Developers |
+| Configuration | Traditional GUI | Configuration-as-Code |
+| Best for | High-traffic production deployment | Serving dynamic data for a limited number of users |
+| Focus | Performance | Flexibility |
+| Language | Java | JavaScript (Node.js) |
+
 # Installation
-Intercity.js is a work in progress and it hasn't been published yet. It currently supports only serving raster data over WMS.
+Intercity.js is a work in progress and it hasn't been published yet. 
+
+| Current status | |
+| --- | --- |
+| WMS | Working demo, not fully standards-compliant |
+| WMTS | Working demo, not fully standards-compliant |
+| Raster reprojection | Usable |
+| WCS | Not started |
+| WFS | Not started |
+
+It currently supports only serving raster data over WMS and WMTS.
 
 # Usage
 
