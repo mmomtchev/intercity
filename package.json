@@ -22,7 +22,7 @@
     "express"
   ],
   "author": "Momtchil Momtchev <momtchil@momtchev.com>",
-  "license": "GPL-3.0-or-later",
+  "license": "LGPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/mmomtchev/intercity/issues"
   },
