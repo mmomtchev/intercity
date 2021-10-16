@@ -1,7 +1,6 @@
 'use strict';
 
 const gdal = require('gdal-async');
-const fastify = require('fastify')({ logger: { level: 'debug' } });
 const fs = require('fs');
 const AsyncLock = require('async-lock');
 

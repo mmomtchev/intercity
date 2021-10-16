@@ -2,7 +2,6 @@
 
 const gdal = require('gdal-async');
 const { create, fragment } = require('xmlbuilder2');
-const fastify = require('fastify')({ logger: { level: 'debug' } });
 const semver = require('semver');
 
 const core = require('./core');
@@ -31,8 +30,8 @@ class WMS extends Protocol {
         this.defaultVersion = '1.3.0';
     }
 
-    register(fastify) {
-        fastify.get(this.path, this.main.bind(this));
+    register() {
+        core.fastify.get(this.path, this.main.bind(this));
     }
 
     async main(request, reply) {
@@ -138,7 +137,7 @@ class WMS extends Protocol {
         const layersString = getQueryParam(request.query, 'layers');
         if (typeof layersString !== 'string') throw new Error('LAYERS must be a list of string');
         const layers = layersString.split(',');
-        fastify.log.debug(`WMS> GetMap ${layers}`);
+        core.fastify.log.debug(`WMS> GetMap ${layers}`);
 
         let format;
         const queryFormat = getQueryParam(request.query, 'format');
@@ -169,7 +168,7 @@ class WMS extends Protocol {
                 }
 
                 const mapRequest = new Request(request, l, reqSRS, bbox, format, width, height);
-                fastify.log.debug(`WMS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`);
+                core.fastify.log.debug(`WMS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`);
                 return l.handler(mapRequest, new Reply(mapRequest, reply, l));
             }
         }

@@ -1,5 +1,4 @@
 'use strict';
-const fastify = require('fastify')({ logger: true });
 const gdal = require('gdal-async');
 
 const wms = require('./wms');
@@ -13,16 +12,16 @@ const wkss = require('./wkss');
 
 async function listen(port) {
     try {
-        await fastify.listen(port);
+        await core.fastify.listen(port);
     } catch (err) {
-        fastify.log.error(err);
+        core.fastify.log.error(err);
         throw err;
     }
 }
 
 function handle(proto, base, path) {
     const handler = new proto(path, base);
-    handler.register(fastify);
+    handler.register();
 }
 
 function use(handler) {

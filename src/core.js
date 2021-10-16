@@ -1,6 +1,10 @@
 'use strict';
 const gdal = require('gdal-async');
-const fastify = require('fastify')({ logger: { level: 'debug' } });
+const fastify = require('fastify')(
+    process.env.DEBUG ?
+        { logger: { level: 'debug' } } :
+        {}
+);
 
 const wgs84 = gdal.SpatialReference.fromEPSG(4326);
 
@@ -56,6 +60,7 @@ function unlayer(idx) {
 }
 
 module.exports = {
+    fastify,
     wgs84,
     updateSequence,
     layers,

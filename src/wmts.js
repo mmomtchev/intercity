@@ -1,8 +1,6 @@
 'use strict';
 
-const gdal = require('gdal-async');
 const { create, fragment } = require('xmlbuilder2');
-const fastify = require('fastify')({ logger: { level: 'debug' } });
 const semver = require('semver');
 
 const core = require('./core');
@@ -22,9 +20,9 @@ class WMTS extends Protocol {
         this.url = `${base}${path}`;
     }
 
-    register(fastify) {
-        fastify.get(this.path, this.main.bind(this));
-        fastify.get(`${this.path}/tile/:layer/:format/:set/:zoom/:col/:row(^\\d+).png`, this.getTile.bind(this));
+    register() {
+        core.fastify.get(this.path, this.main.bind(this));
+        core.fastify.get(`${this.path}/tile/:layer/:format/:set/:zoom/:col/:row(^\\d+).png`, this.getTile.bind(this));
     }
 
     async main(request, reply) {
@@ -187,7 +185,7 @@ class WMTS extends Protocol {
     getTile(request, reply) {
         const layer = request.params.layer;
         if (typeof layer !== 'string') throw new Error('layer must be a string');
-        fastify.log.debug(`WMTS> GetTile ${layer}`);
+        core.fastify.log.debug(`WMTS> GetTile ${layer}`);
         const format = formats.find((x) => x.name === request.params.format);
         if (!format) throw new Error(`Unsupported format ${request.params.format}`);
         const set = matrixSets.find((x) => x.name === request.params.set);
@@ -197,9 +195,8 @@ class WMTS extends Protocol {
         for (const l of core.layers) {
             if (l.name === layer) {
                 const bbox = set.tileEnvelope(+request.params.zoom, +request.params.col, +request.params.row);
-                console.log(bbox);
                 const mapRequest = new Request(request, l, set.srs, bbox, format, width, height);
-                fastify.log.debug(`WMTS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`);
+                core.fastify.log.debug(`WMTS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`);
                 return l.handler(mapRequest, new Reply(mapRequest, reply, l));
             }
         }

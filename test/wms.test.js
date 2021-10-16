@@ -3,7 +3,7 @@ const expect = chai.expect;
 const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 
-const { base, matchPNGtoURL, projBox } = require('./libtest');
+const { testRoot, matchPNGtoURL, projBox } = require('./libtest');
 
 describe('WMS', () => {
     describe('GetCapabilities', () => { 
@@ -18,20 +18,20 @@ describe('WMS', () => {
 
     describe('GetMap', () => {
         it('should support a default request',
-            matchPNGtoURL(base,
+            matchPNGtoURL(testRoot,
                 '/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=stripes%3Ayellow&SRS=EPSG:4326&format=image/png&BBOX=-1,45,1,43',
                 'wms_default.png', 512)
         )
 
         it('should support width & height', () =>
-            matchPNGtoURL(base,
+            matchPNGtoURL(testRoot,
                 '/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=stripes%3Ayellow&SRS=EPSG:4326&format=image/png&BBOX=-1,45,1,43&width=256&height=256',
                 'wms_tilesize.png', 256)
         )
 
         const bbox3857 = projBox('EPSG:4326', 'EPSG:3857', [ -1, 45, 1, 43 ]).join(',');
         it('should support reprojection',
-            matchPNGtoURL(base,
+            matchPNGtoURL(testRoot,
                 `/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=stripes%3Ayellow&SRS=EPSG:3857&format=image/png&BBOX=${bbox3857}`,
                 'wms_3857.png', 512)
         )

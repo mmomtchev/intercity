@@ -9,6 +9,8 @@ const { PNG } = require('pngjs');
 const pixelmatch = require('pixelmatch');
 const proj4 = require('proj4');
 
+const testPort = 8998;
+
 function matchPNGtoURL(base, url, png, size) {
     return () => chai.request(base)
         .get(url)
@@ -30,5 +32,6 @@ function projBox(sproj, tproj, coords) {
 module.exports = {
     matchPNGtoURL,
     projBox,
-    base: 'http://localhost:3000'
+    testRoot: `http://localhost:${testPort}`,
+    testPort
 };

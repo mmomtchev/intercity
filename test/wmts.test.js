@@ -3,7 +3,7 @@ const expect = chai.expect;
 const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 
-const { base, matchPNGtoURL, projBox } = require('./libtest');
+const { testRoot, matchPNGtoURL, projBox } = require('./libtest');
 
 describe('WMS', () => {
     describe('GetCapabilities', () => {
@@ -18,11 +18,11 @@ describe('WMS', () => {
 
     describe('GetMap', () => {
         it('should return native tiles',
-            matchPNGtoURL(base, '/wmts/tile/stripes:yellow/PNG/GoogleCRS84Quad/4/8/2.png', 'wmts_googleCRS84quad.png', 256)
+            matchPNGtoURL(testRoot, '/wmts/tile/stripes:yellow/PNG/GoogleCRS84Quad/4/8/2.png', 'wmts_googleCRS84quad.png', 256)
         )
 
         it('should return reprojected tiles',
-            matchPNGtoURL(base, '/wmts/tile/stripes:yellow/PNG/GoogleCRS84Quad/4/8/2.png', 'wmts_googleCRS84quad.png', 256)
+            matchPNGtoURL(testRoot, '/wmts/tile/stripes:yellow/PNG/GoogleCRS84Quad/4/8/2.png', 'wmts_googleCRS84quad.png', 256)
         )
 
     })
