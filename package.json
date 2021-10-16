@@ -4,6 +4,7 @@
   "description": "An Express.js-like WMS/WMTS server",
   "main": "index.js",
   "scripts": {
+    "dev": "DEBUG=1 node test/testserver.js",
     "test": "mocha",
     "lint": "eslint src/*.js test/*.js",
     "codecov": "curl -s https://codecov.io/bash | bash",
