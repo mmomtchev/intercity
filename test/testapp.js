@@ -81,7 +81,7 @@ module.exports = function (port) {
         return reply.send(ds);
     });
 
-    const rain_ds = gdal.open('2-warped.tiff');
+    const rain_ds = gdal.open(path.resolve(__dirname, 'data', '2-warped.tiff'));
     const rain_band = rain_ds.bands.get(1);
     const rain_blue_ds = gdal.open('temp', 'w', 'MEM',
         rain_ds.rasterSize.x, rain_ds.rasterSize.y, 3, gdal.GDT_Byte);
