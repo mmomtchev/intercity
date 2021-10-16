@@ -5,15 +5,15 @@ chai.use(chaiHttp);
 
 const { testRoot, matchPNGtoURL } = require('./libtest');
 
-describe('WMS', () => {
+describe('WMTS', () => {
     describe('GetCapabilities', () => {
-        it('should return a valid response', () => {
-            chai.request('http://localhost:3000')
-                .get('/wms?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities')
+        it('should return a valid response', () =>
+            chai.request(testRoot)
+                .get('/wmts?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetCapabilities')
                 .then((data) => {
                     expect(data).to.have.status(200);
-                });
-        });
+                })
+        );
     });
 
     describe('GetMap', () => {

@@ -1,5 +1,3 @@
 const testApp = require('./testapp');
 
-const { testPort } = require('./libtest');
-
-testApp(testPort);
+testApp(8999);

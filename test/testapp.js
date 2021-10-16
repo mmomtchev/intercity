@@ -60,7 +60,7 @@ module.exports = function (port) {
         name: 'coords:lat_lon',
         title: 'Latitude in red band and longitude in green band',
         srs: gdal.SpatialReference.fromEPSG(4326),
-        bbox: { minX: -90, minY: -180, maxX: 90, maxY: 180 }
+        bbox: { minX: -180, minY: -90, maxX: 180, maxY: 90 }
     }, async (request, reply) => {
         const width = 360;
         const height = 180;
