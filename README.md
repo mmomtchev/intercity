@@ -73,7 +73,7 @@ intercity.layer({
     await Promise.all([
         red.pixels.writeAsync(0, 0, 128, 128, data),
         green.pixels.writeAsync(0, 0, 128, 128, data),
-        blue.pixels.writeAsync(0, 0, 128, 128, data)
+        blue.fillAsync(0)
     ]);
     return reply.send(ds);   // intercity will do the rest
 });
