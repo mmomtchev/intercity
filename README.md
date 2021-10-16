@@ -1,6 +1,7 @@
 # Intercity.js
 An Express-like middleware for serving dynamic geospatial data over WMS, WMTS, WCS and WFS
-Based upon `gdal-async` and `fastify`
+
+Built upon `gdal-async` and `fastify`
 
 ***Intercity.js is still unreleased and not ready for use***
 
@@ -26,7 +27,7 @@ intercity.layer({
     srs: rain_ds.srs,
     bbox: rain_ds.bands.getEnvelope()
 }, async (request, reply) => {
-    return reply.rgb(rain_ds);   // intercity will do the rest
+    return reply.send(rain_ds);   // intercity will do the rest
 });
 
 // A random dynamically generated yellow layer
@@ -53,7 +54,7 @@ intercity.layer({
         green.pixels.writeAsync(0, 0, 128, 128, data),
         blue.pixels.writeAsync(0, 0, 128, 128, data)
     ]);
-    return reply.rgb(ds);   // intercity will do the rest
+    return reply.send(ds);   // intercity will do the rest
 });
 
 intercity.handle(intercity.wms, 'http://localhost:3000', '/wms');
