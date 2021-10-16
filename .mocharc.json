@@ -1,4 +1,7 @@
 {
+  "spec": [
+    "test/*.test.js"
+  ],
   "require": [
     "test/hooks.js"
   ],
