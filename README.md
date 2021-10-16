@@ -4,6 +4,10 @@ Based upon `gdal-async` and `fastify`
 
 ***Intercity.js is still unreleased and not ready for use***
 
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+[![Node.js CI](https://github.com/mmomtchev/intercity/actions/workflows/node.js.yml/badge.svg)](https://github.com/mmomtchev/intercity/actions/workflows/node.js.yml)
+[![codecov](https://codecov.io/gh/mmomtchev/intercity/branch/master/graph/badge.svg?token=08HS1KXSW9)](https://codecov.io/gh/mmomtchev/intercity)
+
 # Installation
 Intercity.js is a work in progress and it hasn't been published yet. It currently supports only serving raster data over WMS.
 
