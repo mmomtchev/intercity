@@ -101,6 +101,9 @@ module.exports = function (port) {
 
     intercity.handle(intercity.wms, `http://localhost:${port}`, '/wms');
     intercity.handle(intercity.wmts, `http://localhost:${port}`, '/wmts');
+    intercity.handle(intercity.wmtsRenderer, `http://localhost:${port}`, '/wmtsRender', {
+        target: `http://localhost:${port}/wmts`
+    });
     intercity.use(intercity.png);
     intercity.use(intercity.jpeg);
     intercity.use(gdal.SpatialReference.fromEPSG(3857));

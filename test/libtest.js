@@ -10,7 +10,7 @@ const {PNG} = require('pngjs');
 const pixelmatch = require('pixelmatch');
 const proj4 = require('proj4');
 
-const testPort = 8998;
+const testPort = process.env.MOCHA_PORT ? +process.env.MOCHA_PORT : 8998;
 
 function matchPNGtoURL(base, url, png, size) {
     return () =>

@@ -3,6 +3,7 @@ const gdal = require('gdal-async');
 
 const wms = require('./wms');
 const wmts = require('./wmts');
+const wmtsRenderer = require('./wmtsRenderer');
 const core = require('./core');
 const png = require('./png');
 const jpeg = require('./jpeg');
@@ -19,8 +20,8 @@ async function listen(port) {
     }
 }
 
-function handle(proto, base, path) {
-    const handler = new proto(path, base);
+function handle(proto, base, path, opts) {
+    const handler = new proto(path, base, opts);
     handler.register();
 }
 
@@ -43,6 +44,7 @@ module.exports = {
     listen,
     wms,
     wmts,
+    wmtsRenderer,
     png,
     jpeg,
     wkss

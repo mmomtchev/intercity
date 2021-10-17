@@ -5,7 +5,8 @@ const { fastify } = require('../src/core');
 
 const mochaHooks = {
     beforeAll() {
-        testApp(testPort);
+        if (!process.env.MOCHA_PORT)
+            testApp(testPort);
     },
     afterAll() {
         fastify.close();

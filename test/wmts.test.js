@@ -103,4 +103,14 @@ describe('WMTS', () => {
                     ));
         });
     });
+
+    describe('[Built-in renderer]', () => {
+        it('should return a valid response', () =>
+            chai
+                .request(testRoot)
+                .get('/wmtsRender?layer=stripes:yellow')
+                .then((data) => {
+                    expect(data).to.have.status(200);
+                }));
+    });
 });
