@@ -21,7 +21,7 @@ class WMTS extends Protocol {
 
     register() {
         core.fastify.get(this.path, this.main.bind(this));
-        core.fastify.get(`${this.path}/tile/:layer/:format/:set/:zoom/:col/:row(^\\d+).png`, this.getTile.bind(this));
+        core.fastify.get(`${this.path}/tile/:layer/:format/:set/:zoom/:col/:row(^\\d+).:ext(\\w+)`, this.getTile.bind(this));
     }
 
     async main(request, reply) {

@@ -105,7 +105,7 @@ describe('WMS', () => {
 
         describe('gdal_translate', () => {
             const filename = '/vsimem/WMS_default_translate.png';
-            it('should produce identical results to a direct HTTP call w/png', () =>
+            it('should produce results identical to a direct HTTP call w/png', () =>
                 wms
                     .openAsync(testRoot + layerYellowStripesPNG)
                     .then((ds) =>
@@ -122,7 +122,7 @@ describe('WMS', () => {
                             ])
                             .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 0))
                     ));
-            it('should produce (almost) identical results to a direct HTTP call w/jpeg', () =>
+            it('should produce (almost) results identical to a direct HTTP call w/jpeg', () =>
                 wms
                     .openAsync(testRoot + layerYellowStripes + '&format=image/jpeg')
                     .then((ds) =>

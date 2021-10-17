@@ -84,7 +84,7 @@ describe('WMTS', () => {
 
         describe('gdal_translate', () => {
             const filename = '/vsimem/WMTS_default_translate.png';
-            it('should produce identical results to WMS', () =>
+            it('should produce results identical to WMS', () =>
                 wmts
                     .openAsync('WMTS:' + testRoot + layerYellowStripes)
                     .then((ds) =>

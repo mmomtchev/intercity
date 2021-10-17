@@ -27,11 +27,9 @@ Intercity.js is a work in progress and it hasn't been published yet.
 | --- | --- |
 | WMS | Working demo, not fully standards-compliant |
 | WMTS | Working demo, not fully standards-compliant |
-| Raster reprojection | Usable |
+| Raster reprojection | Usable, WMS only |
 | WCS | Not started |
 | WFS | Not started |
-
-It currently supports only serving raster data over WMS and WMTS.
 
 # Usage
 
