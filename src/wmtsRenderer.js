@@ -27,11 +27,11 @@ class wmtsRenderer extends Protocol {
 
         reply.type('text/html');
         if (!layer || !set) {
-            let list = '<html><head><meta charset="utf-8"><title>Intercity.js</title></head><body><ul>';
+            let list =
+                '<html><head><meta charset="utf-8"><title>Intercity.js</title></head><body><ul>';
             for (const layer of core.layers)
                 for (const set of matrixSets)
-                    if (set.srs.isSame(layer.srs))
-                        list += `<li><a href="${this.url}layer=${layer.name}&set=${set.name}">${layer.name}@${set.name} : ${layer.title}</a></li>`;
+                    list += `<li><a href="${this.url}layer=${layer.name}&set=${set.name}">${layer.name}@${set.name} : ${layer.title}</a></li>`;
             list += '</ul></body></html>';
             reply.send(list);
             return;

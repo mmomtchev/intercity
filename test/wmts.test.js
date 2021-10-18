@@ -42,10 +42,19 @@ describe('WMTS', () => {
 
     describe('GetMap', () => {
         it(
-            'should return native tiles',
+            'should support EPSG:4326 based tiles',
             matchPNGtoURL(
                 '/wmts/tile/stripes:yellow/PNG/GoogleCRS84Quad/4/8/2.png',
                 'wmts_googleCRS84quad.png',
+                256
+            )
+        );
+
+        it(
+            'should support EPSG:3587 based tiles',
+            matchPNGtoURL(
+                '/wmts/tile/stripes:yellow/PNG/GoogleMapsCompatible/4/7/5.png',
+                'wmts_googleMapsCompatible.png',
                 256
             )
         );
@@ -98,9 +107,9 @@ describe('WMTS', () => {
             });
         });
 
+        const filename = '/vsimem/WMTS_translate.png';
         describe('gdal_translate', () => {
-            const filename = '/vsimem/WMTS_default_translate.png';
-            it('should produce results identical to WMS', () =>
+            it('should produce results identical to WMS for EPSG:4326 based tiles', () =>
                 wmts
                     .openAsync(
                         GDAL_WMTS_Service_XML('stripes:yellow', 'image/png', 'GoogleCRS84Quad')
@@ -118,6 +127,30 @@ describe('WMTS', () => {
                                 '43'
                             ])
                             .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 0))
+                    ));
+        });
+
+        describe('gdal_translate', () => {
+            it('should produce results (almost) identical to WMS for EPSG:3587 based tiles', () =>
+                wmts
+                    .openAsync(
+                        GDAL_WMTS_Service_XML('stripes:yellow', 'image/png', 'GoogleMapsCompatible')
+                    )
+                    .then((ds) =>
+                        gdal
+                            .translateAsync(filename, ds, [
+                                '-outsize',
+                                '512',
+                                '512',
+                                '-projwin_srs',
+                                'EPSG:4326',
+                                '-projwin',
+                                '-1',
+                                '45',
+                                '1',
+                                '43'
+                            ])
+                            .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 2000))
                     ));
         });
     });

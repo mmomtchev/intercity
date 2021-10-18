@@ -174,6 +174,7 @@ module.exports = function (port) {
     intercity.use(gdal.SpatialReference.fromEPSG(3857));
     intercity.use(gdal.SpatialReference.fromEPSG(4326));
     intercity.use(intercity.wkss.GoogleCRS84Quad);
+    intercity.use(intercity.wkss.GoogleMapsCompatible);
 
     intercity.listen(port).catch((e) => console.error(e));
 
