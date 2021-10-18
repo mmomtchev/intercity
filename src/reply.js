@@ -11,8 +11,12 @@ const respondSymbol = Symbol('_respond');
 
 function bbox2geo(bbox, rasterSize) {
     return [
-        bbox.minX, (bbox.maxX - bbox.minX) / rasterSize.x, 0,
-        bbox.maxY, 0, (bbox.minY - bbox.maxY) / rasterSize.y
+        bbox.minX,
+        (bbox.maxX - bbox.minX) / rasterSize.x,
+        0,
+        bbox.maxY,
+        0,
+        (bbox.minY - bbox.maxY) / rasterSize.y
     ];
 }
 
@@ -67,10 +71,10 @@ class Reply {
 Reply.prototype[prepareSymbol] = async function (ds) {
     if (!ds.lock) ds.lock = new AsyncLock();
     await ds.lock.acquire('srs', async () => {
-        if (!await ds.srsAsync) ds.srs = this[layerSymbol].srs;
+        if (!(await ds.srsAsync)) ds.srs = this[layerSymbol].srs;
     });
     await ds.lock.acquire('geo', async () => {
-        if (!await ds.geoTransformAsync) {
+        if (!(await ds.geoTransformAsync)) {
             ds.geoTransform = bbox2geo(this[layerSymbol].bbox, ds.rasterSize);
         }
     });

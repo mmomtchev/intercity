@@ -6,7 +6,35 @@ chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 const gdal = require('gdal-async');
 
-const {testRoot, matchPNGtoURL, matchPNGtoDS, projBox} = require('./libtest');
+const { testRoot, matchPNGtoURL, matchPNGtoDS, projBox } = require('./libtest');
+
+function GDAL_WMS_Service_XML(layer, format) {
+    return `<GDAL_WMS>
+  <Service name="WMS">
+    <Version>1.3.0</Version>
+    <ServerUrl>${testRoot}/wms?SERVICE=WMS</ServerUrl>
+    <Layers>${layer}</Layers>
+    <Transparent>FALSE</Transparent>
+    <CRS>EPSG:4326</CRS>
+    <ImageFormat>${format}</ImageFormat>
+    <BBoxOrder>xyXY</BBoxOrder>
+  </Service>
+  <DataWindow>
+    <UpperLeftX>-180</UpperLeftX>
+    <UpperLeftY>90</UpperLeftY>
+    <LowerRightX>180</LowerRightX>
+    <LowerRightY>-90</LowerRightY>
+    <SizeX>1073741824</SizeX>
+    <SizeY>536870912</SizeY>
+  </DataWindow>
+  <BandsCount>3</BandsCount>
+  <BlockSizeX>1024</BlockSizeX>
+  <BlockSizeY>1024</BlockSizeY>
+  <DataValues min="0 0 0" max="255 255 255" />
+  <OverviewCount>20</OverviewCount>
+</GDAL_WMS>
+`;
+}
 
 describe('WMS', () => {
     const wmsService = '/wms?SERVICE=WMS&VERSION=1.1.1';
@@ -29,26 +57,25 @@ describe('WMS', () => {
         it(
             'should support a default request',
             matchPNGtoURL(
-                testRoot,
                 layerYellowStripesPNG + '&SRS=EPSG:4326&BBOX=-1,43,1,45',
                 'wms_default.png',
                 512
             )
         );
 
-        it('should support width & height', () =>
+        it(
+            'should support width & height',
             matchPNGtoURL(
-                testRoot,
                 layerYellowStripesPNG + '&SRS=EPSG:4326&BBOX=-1,43,1,45&width=256&height=256',
                 'wms_tilesize.png',
                 256
-            ));
+            )
+        );
 
         const bbox3857 = projBox('EPSG:4326', 'EPSG:3857', [-1, 43, 1, 45]).join(',');
         it(
             'should support reprojection',
             matchPNGtoURL(
-                testRoot,
                 layerYellowStripesPNG + `&SRS=EPSG:3857&BBOX=${bbox3857}`,
                 'wms_3857.png',
                 512
@@ -95,7 +122,7 @@ describe('WMS', () => {
             });
 
             it('should open a subdataset URL and report the metadata', () => {
-                return wms.openAsync(testRoot + layerYellowStripes).then((ds) => {
+                return wms.openAsync(testRoot + layerYellowStripesPNG).then((ds) => {
                     const info = JSON.parse(gdal.info(ds, ['-json']));
                     expect(info.driverShortName).equal('WMS');
                     expect(info.metadata.IMAGE_STRUCTURE.INTERLEAVE).to.equal('PIXEL');
@@ -107,7 +134,7 @@ describe('WMS', () => {
             const filename = '/vsimem/WMS_default_translate.png';
             it('should produce results identical to a direct HTTP call w/png', () =>
                 wms
-                    .openAsync(testRoot + layerYellowStripesPNG)
+                    .openAsync(GDAL_WMS_Service_XML('stripes%3Ayellow', 'image/png'))
                     .then((ds) =>
                         gdal
                             .translateAsync(filename, ds, [
@@ -122,9 +149,9 @@ describe('WMS', () => {
                             ])
                             .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 0))
                     ));
-            it('should produce (almost) results identical to a direct HTTP call w/jpeg', () =>
+            it('should produce results (almost) identical to a direct HTTP call w/jpeg', () =>
                 wms
-                    .openAsync(testRoot + layerYellowStripes + '&format=image/jpeg')
+                    .openAsync(GDAL_WMS_Service_XML('stripes%3Ayellow', 'image/jpeg'))
                     .then((ds) =>
                         gdal
                             .translateAsync(filename, ds, [

@@ -39,7 +39,6 @@ const gdal = require('gdal-async');
 
 // A layer coming from a tiff
 const rain_ds = gdal.open('rain.tiff');
-rain_band.scale = 40; // Scale is honored (4mm of rain = 160/256 of blue)
 intercity.layer({
     name: 'arome:rain',
     title: 'Rain AROME',

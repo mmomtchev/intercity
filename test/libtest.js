@@ -6,16 +6,17 @@ chai.use(chaiHttp);
 const fs = require('fs');
 const path = require('path');
 const gdal = require('gdal-async');
-const {PNG} = require('pngjs');
+const { PNG } = require('pngjs');
 const pixelmatch = require('pixelmatch');
 const proj4 = require('proj4');
 
 const testPort = process.env.MOCHA_PORT ? +process.env.MOCHA_PORT : 8998;
+const testRoot = `http://localhost:${testPort}`;
 
-function matchPNGtoURL(base, url, png, size) {
+function matchPNGtoURL(url, png, size) {
     return () =>
         chai
-            .request(base)
+            .request(testRoot)
             .get(url)
             .then((data) => {
                 expect(data).to.have.status(200);
@@ -46,6 +47,6 @@ module.exports = {
     matchPNGtoURL,
     matchPNGtoDS,
     projBox,
-    testRoot: `http://localhost:${testPort}`,
+    testRoot,
     testPort
 };

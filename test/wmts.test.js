@@ -6,7 +6,24 @@ chai.use(chaiHttp);
 chai.use(chaiAsPromised);
 const gdal = require('gdal-async');
 
-const {testRoot, matchPNGtoURL, matchPNGtoDS} = require('./libtest');
+const { testRoot, matchPNGtoURL, matchPNGtoDS } = require('./libtest');
+
+function GDAL_WMTS_Service_XML(layer, format, matrix) {
+    return `<GDAL_WMTS>
+  <GetCapabilitiesUrl>${testRoot}/wmts?SERVICE=WMTS&amp;VERSION=1.0.0&amp;REQUEST=GetCapabilities</GetCapabilitiesUrl>
+  <Layer>${layer}</Layer>
+  <Style>${layer}</Style>
+  <TileMatrixSet>${matrix}</TileMatrixSet>
+  <Format>${format}</Format>
+  <BandsCount>3</BandsCount>
+  <DataType>Byte</DataType>
+  <Cache />
+  <UnsafeSSL>true</UnsafeSSL>
+  <ZeroBlockHttpCodes>204,404</ZeroBlockHttpCodes>
+  <ZeroBlockOnServerException>true</ZeroBlockOnServerException>
+</GDAL_WMTS>
+`;
+}
 
 describe('WMTS', () => {
     const wmtsService = '/wmts?SERVICE=WMTS&VERSION=1.0.0';
@@ -27,7 +44,6 @@ describe('WMTS', () => {
         it(
             'should return native tiles',
             matchPNGtoURL(
-                testRoot,
                 '/wmts/tile/stripes:yellow/PNG/GoogleCRS84Quad/4/8/2.png',
                 'wmts_googleCRS84quad.png',
                 256
@@ -86,7 +102,9 @@ describe('WMTS', () => {
             const filename = '/vsimem/WMTS_default_translate.png';
             it('should produce results identical to WMS', () =>
                 wmts
-                    .openAsync('WMTS:' + testRoot + layerYellowStripes)
+                    .openAsync(
+                        GDAL_WMTS_Service_XML('stripes:yellow', 'image/png', 'GoogleCRS84Quad')
+                    )
                     .then((ds) =>
                         gdal
                             .translateAsync(filename, ds, [

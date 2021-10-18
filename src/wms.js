@@ -148,8 +148,13 @@ class WMS extends Protocol {
             format = formats[0];
         }
 
-        const querySRS = getQueryParam(request.query, 'srs') || getQueryParam(request.query, 'crs');
-        const srs = gdal.SpatialReference.fromUserInput(querySRS);
+        let srs, querySRS;
+        try {
+            querySRS = getQueryParam(request.query, 'srs') || getQueryParam(request.query, 'crs');
+            srs = gdal.SpatialReference.fromUserInput(querySRS);
+        } catch (e) {
+            throw new Error(`Invalid spatial reference specified: ${e}`);
+        }
 
         const width = +(getQueryParam(request.query, 'width', 512));
         const height = +(getQueryParam(request.query, 'height', 512));

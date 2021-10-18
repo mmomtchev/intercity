@@ -15,6 +15,7 @@ class TileMatrix {
         this.bbox = bbox;
         this.srs = gdal.SpatialReference.fromURN(this.crs);
         this.xform = new gdal.CoordinateTransformation(core.wgs84, this.srs);
+        this.epsg = this.srs.getAuthorityCode();
         this.ul = { x: bbox.minX, y: bbox.maxY };
         this.lr = { x: bbox.maxX, y: bbox.minY };
         this.levels = [];
