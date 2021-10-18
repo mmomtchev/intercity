@@ -26,17 +26,15 @@ function handle(proto, base, path, opts) {
 }
 
 function use(handler) {
-    if (handler instanceof format.Format)
-        format.formats.push(handler);
-    else if (handler instanceof matrix.TileMatrix)
-        matrix.sets.push(handler);
-    else if (handler instanceof gdal.SpatialReference)
-        core.srsAdd(handler);
-    else
-        throw new TypeError('Unsupported handler type');
+    if (handler instanceof format.Format) format.formats.push(handler);
+    else if (handler instanceof matrix.TileMatrix) matrix.sets.push(handler);
+    else if (handler instanceof gdal.SpatialReference) core.srsAdd(handler);
+    else throw new TypeError('Unsupported handler type');
 }
 
 const layer = core.layer;
+gdal.config.set('GDAL_PAM_ENABLED', 'NO');
+
 module.exports = {
     layer,
     use,
