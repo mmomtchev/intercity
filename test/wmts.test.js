@@ -153,6 +153,54 @@ describe('WMTS', () => {
                             .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 2000))
                     ));
         });
+
+        describe('gdal_translate', () => {
+            it('should produce results (almost) identical to WMS for traditional scaled WGS84 tiles', () =>
+                wmts
+                    .openAsync(
+                        GDAL_WMTS_Service_XML('stripes:yellow', 'image/png', 'GlobalCRS84Scale')
+                    )
+                    .then((ds) =>
+                        gdal
+                            .translateAsync(filename, ds, [
+                                '-outsize',
+                                '512',
+                                '512',
+                                '-projwin_srs',
+                                'EPSG:4326',
+                                '-projwin',
+                                '-1',
+                                '45',
+                                '1',
+                                '43'
+                            ])
+                            .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 2000))
+                    ));
+        });
+
+        describe('gdal_translate', () => {
+            it('should produce results (almost) identical to WMS for pixel-based WGS84 tiles', () =>
+                wmts
+                    .openAsync(
+                        GDAL_WMTS_Service_XML('stripes:yellow', 'image/png', 'GlobalCRS84Pixel')
+                    )
+                    .then((ds) =>
+                        gdal
+                            .translateAsync(filename, ds, [
+                                '-outsize',
+                                '512',
+                                '512',
+                                '-projwin_srs',
+                                'EPSG:4326',
+                                '-projwin',
+                                '-1',
+                                '45',
+                                '1',
+                                '43'
+                            ])
+                            .then((ds) => matchPNGtoDS(ds, 'wms_default.png', 2000))
+                    ));
+        });
     });
 
     describe('[Built-in renderer]', () => {
