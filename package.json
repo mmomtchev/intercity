@@ -4,7 +4,7 @@
   "description": "An Express.js-like WMS/WMTS server",
   "main": "index.js",
   "scripts": {
-    "dev": "DEBUG=1 node test/testserver.js",
+    "dev": "DEBUG=1 nodemon test/testserver.js",
     "test": "mocha",
     "lint": "eslint src/*.js test/*.js",
     "codecov": "curl -s https://codecov.io/bash | bash",
@@ -45,7 +45,7 @@
     "eslint-plugin-mocha": "^9.0.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "mocha": "^9.1.3",
-    "nodemon": "^2.0.7",
+    "nodemon": "^2.0.13",
     "pixelmatch": "^5.2.1",
     "pngjs": "^6.0.0",
     "prettier": "^2.4.1",
