@@ -65,6 +65,8 @@ class wmtsRenderer extends Protocol {
                     layer: '${layer.name}',
                     matrixSet: '${set.name}',
                 });
+                // Quick&dirty workaround for https://github.com/openlayers/openlayers/issues/12901
+                if (options.urls && options.urls.length > 1) options.urls = [options.urls[0]];
 
                 const extent = ol.proj.transformExtent([
                     ${layer.latlonbbox.minX}, ${layer.latlonbbox.minY}, ${layer.latlonbbox.maxX}, ${layer.latlonbbox.maxY}
