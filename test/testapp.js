@@ -129,7 +129,7 @@ module.exports = function (port) {
         }
     );
 
-    const rain_ds = gdal.open(path.resolve(__dirname, 'data', '2-warped.tiff'));
+    const rain_ds = gdal.open(path.resolve(__dirname, 'data', 'rain.tiff'));
     const rain_band = rain_ds.bands.get(1);
     const rain_blue_ds = gdal.open(
         'temp',
@@ -137,21 +137,19 @@ module.exports = function (port) {
         'MEM',
         rain_ds.rasterSize.x,
         rain_ds.rasterSize.y,
-        3,
+        4,
         gdal.GDT_Byte
     );
     rain_blue_ds.bands.get(1).fill(0);
     rain_blue_ds.bands.get(2).fill(0);
+    const raw = rain_band.pixels.read(0, 0, rain_ds.rasterSize.x, rain_ds.rasterSize.y);
+    const scaled = raw.map((x) => Math.min(x / 20, 1) * 255);
     rain_blue_ds.bands
         .get(3)
-        .pixels.write(
-            0,
-            0,
-            rain_ds.rasterSize.x,
-            rain_ds.rasterSize.y,
-            rain_band.pixels.read(0, 0, rain_ds.rasterSize.x, rain_ds.rasterSize.y)
-        );
-    rain_blue_ds.bands.get(3).scale = 40;
+        .pixels.write(0, 0, rain_ds.rasterSize.x, rain_ds.rasterSize.y, scaled);
+    rain_blue_ds.bands
+        .get(4)
+        .pixels.write(0, 0, rain_ds.rasterSize.x, rain_ds.rasterSize.y, scaled);
     intercity.layer(
         {
             name: 'arome:rain',
@@ -160,7 +158,7 @@ module.exports = function (port) {
             bbox: rain_ds.bands.getEnvelope()
         },
         async (request, reply) => {
-            return reply.rgb(rain_blue_ds);
+            return reply.send(rain_blue_ds);
         }
     );
 

@@ -1,19 +1,18 @@
 'use strict';
 const gdal = require('gdal-async');
-const fastify = require('fastify')(
-    process.env.DEBUG ?
-        { logger: { level: 'debug' } } :
-        {}
-);
+const fastify = require('fastify')(process.env.DEBUG ? { logger: { level: 'debug' } } : {});
 
 const wgs84 = gdal.SpatialReference.fromEPSG(4326);
 
 let updateSequence = 1;
 
 function epsg(srs) {
-    srs.autoIdentifyEPSG();
-    if (srs.getAuthorityName() !== 'EPSG')
+    try {
+        srs.autoIdentifyEPSG();
+        if (srs.getAuthorityName() !== 'EPSG') throw new Error();
+    } catch (e) {
         throw new Error('Only EPSG projections are supported at the moment');
+    }
     return srs.getAuthorityCode();
 }
 
@@ -47,7 +46,7 @@ function srsAdd(s) {
 }
 
 function layer(opts, handler) {
-    const l = new Layer({...opts, handler});
+    const l = new Layer({ ...opts, handler });
     fastify.log.debug(`layer> create ${l.name}`);
     updateSequence++;
     return layers.push(l) - 1;

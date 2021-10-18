@@ -45,7 +45,7 @@ intercity.layer({
     srs: rain_ds.srs,
     bbox: rain_ds.bands.getEnvelope()
 }, async (request, reply) => {
-    return reply.send(rain_ds);   // intercity will do the rest
+    return reply.send(rain_ds);   // intercity will do the rest (with GDAL's default float -> byte conversion)
 });
 
 // A random dynamically generated yellow layer
