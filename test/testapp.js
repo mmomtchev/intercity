@@ -95,36 +95,79 @@ module.exports = function (port) {
         }
     );
 
+    const color = {
+        units: 'color',
+        unitSymbol: '🎨',
+        values: ['red', 'green', 'blue']
+    };
     intercity.layer(
         {
-            name: 'coords:lat_lon',
-            title: 'Latitude in red band and longitude in green band',
+            name: 'coords:configurable',
+            title: 'Latitude and longitude bands in configurable colors',
             srs: gdal.SpatialReference.fromEPSG(4326),
-            bbox: { minX: -180, minY: -90, maxX: 180, maxY: 90 }
+            bbox: { minX: -180, minY: -90, maxX: 180, maxY: 90 },
+            dimensions: {
+                time: {
+                    current: true,
+                    default: () => new Date(Date.now()),
+                    values: () => ({
+                        min: new Date('2021-01-01T00:00:00Z'),
+                        max: new Date(Date.now()),
+                        res: 'PT6H'
+                    })
+                },
+                horizontal: {
+                    title: 'Horizontal color',
+                    default: 'red',
+                    ...color
+                },
+                vertical: {
+                    title: 'Vertical color',
+                    default: 'green',
+                    ...color
+                },
+                background: {
+                    title: 'Background color',
+                    default: 'blue',
+                    ...color
+                },
+                value: {
+                    title: 'Background color value',
+                    units: '256ths',
+                    default: 0,
+                    values: { min: 0, max: 255, res: 1 }
+                }
+            }
         },
         async (request, reply) => {
             const width = 360;
             const height = 180;
             const ds = await gdal.openAsync('temp', 'w', 'MEM', width, height, 3, gdal.GDT_Byte);
-            const red = await ds.bands.getAsync(1);
-            const green = await ds.bands.getAsync(2);
-            const blue = await ds.bands.getAsync(3);
+            const bands = {
+                red: await ds.bands.getAsync(1),
+                green: await ds.bands.getAsync(2),
+                blue: await ds.bands.getAsync(3)
+            };
+            const horizontal = bands[request.dimensions.horizontal];
+            const vertical = bands[request.dimensions.vertical];
+            const background = bands[request.dimensions.background];
+            const value = request.dimensions.value;
             const data = new Uint8Array(1);
-            for (let y = 0; y < height; y++) {
-                data[0] = y;
-                await red.pixels.writeAsync(0, y, width, 1, data, {
+            for (let y = 0; y < height; y += 2) {
+                data[0] = y / 2;
+                await horizontal.pixels.writeAsync(0, y, width, 1, data, {
                     buffer_height: 1,
                     buffer_width: 1
                 });
             }
-            for (let x = 0; x < width; x++) {
-                data[0] = x;
-                await green.pixels.writeAsync(x, 0, 1, height, data, {
+            for (let x = 0; x < width; x += 2) {
+                data[0] = x / 2;
+                await vertical.pixels.writeAsync(x, 0, 1, height, data, {
                     buffer_height: 1,
                     buffer_width: 1
                 });
             }
-            await blue.fillAsync(0);
+            await background.fillAsync(value);
             return reply.send(ds);
         }
     );

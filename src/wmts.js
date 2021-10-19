@@ -249,7 +249,15 @@ class WMTS extends Protocol {
                     +request.params.col,
                     +request.params.row
                 );
-                const mapRequest = new Request(request, l, set.srs, bbox, format, width, height);
+                const mapRequest = new Request({
+                    request,
+                    layer: l,
+                    srs: set.srs,
+                    bbox,
+                    format,
+                    width,
+                    height
+                });
                 core.fastify.log.debug(
                     `WMTS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`
                 );

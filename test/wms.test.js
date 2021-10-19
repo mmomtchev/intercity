@@ -42,6 +42,8 @@ describe('WMS', () => {
     const wmsServiceGetMap = wmsService + '&REQUEST=GetMap';
     const layerYellowStripes = wmsServiceGetMap + '&LAYERS=stripes%3Ayellow';
     const layerYellowStripesPNG = layerYellowStripes + '&format=image/png';
+    const layerCustomLatLonPNG =
+        wmsServiceGetMap + '&LAYERS=coords%3Aconfigurable&format=image/png';
 
     describe('GetCapabilities', () => {
         it('should return a valid response', () =>
@@ -69,6 +71,25 @@ describe('WMS', () => {
                 layerYellowStripesPNG + '&SRS=EPSG:4326&BBOX=-1,43,1,45&width=256&height=256',
                 'wms_tilesize.png',
                 256
+            )
+        );
+
+        it(
+            'should support dimensions',
+            matchPNGtoURL(
+                layerCustomLatLonPNG +
+                    '&SRS=EPSG:4326&BBOX=-90,-90,90,90&horizontal=green&vertical=blue&background=red&value=20',
+                'wms_latlon_colors.png',
+                512
+            )
+        );
+
+        it(
+            'should support default values for dimensions',
+            matchPNGtoURL(
+                layerCustomLatLonPNG + '&SRS=EPSG:4326&BBOX=-90,-90,90,90',
+                'wms_latlon_default.png',
+                512
             )
         );
 

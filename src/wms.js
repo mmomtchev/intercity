@@ -9,16 +9,17 @@ const Protocol = require('./protocol');
 const Reply = require('./reply');
 const Request = require('./request');
 const formats = require('./format').formats;
-const { getQueryParam } = require('./utils');
+const { getQueryParam, forv } = require('./utils');
 
 const wmsAttrs = {
     '1.1.1': { version: '1.1.1' },
     '1.3.0': {
         version: '1.3.0',
-        'xmlns': 'http://www.opengis.net/wms',
+        xmlns: 'http://www.opengis.net/wms',
         'xmlns:sld': 'http://www.opengis.net/sld',
         'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-        'xsi:schemaLocation': 'http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd'
+        'xsi:schemaLocation':
+            'http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd'
     }
 };
 class WMS extends Protocol {
@@ -41,10 +42,11 @@ class WMS extends Protocol {
         let version = getQueryParam(request.query, 'version', this.defaultVersion);
         if (semver.gt(version, '1.3.0'))
             throw new Error(`Invalid service WMS version ${version}, up to 1.3.0 supported`);
-        if (semver.lt(version, '1.3.0') && semver.gte(version, '1.1.1'))
-            version = '1.1.1';
+        if (semver.lt(version, '1.3.0') && semver.gte(version, '1.1.1')) version = '1.1.1';
         if (semver.lt(version, '1.1.1'))
-            throw new Error(`Invalid service WMS version ${version}, starting from 1.1.1 supported`);
+            throw new Error(
+                `Invalid service WMS version ${version}, starting from 1.1.1 supported`
+            );
         const wmsRequest = getQueryParam(request.query, 'request');
         switch (wmsRequest) {
             case 'GetCapabilities':
@@ -63,15 +65,35 @@ class WMS extends Protocol {
             const bb = l.bbox;
             layers
                 .ele('Layer')
-                .ele('Name').txt(l.name).up()
-                .ele('Title').txt(l.title).up()
-                .ele('CRS').txt(`EPSG:${l.epsg}`).up()
-                .import(this.wmsSRS(l))
-                .ele('LatLonBoundingBox', { minx: bb.minX, miny: bb.minY, maxx: bb.maxX, maxy: bb.maxY }).up()
-                .ele('BoundingBox', { SRS: `EPSG:${l.epsg}`, minx: llbb.minX, miny: llbb.minY, maxx: llbb.maxX, maxy: llbb.maxY }).up()
+                .ele('Name')
+                .txt(l.name)
                 .up()
+                .ele('Title')
+                .txt(l.title)
+                .up()
+                .ele('CRS')
+                .txt(`EPSG:${l.epsg}`)
+                .up()
+                .import(this.wmsSRS(l))
+                .ele('LatLonBoundingBox', {
+                    minx: bb.minX,
+                    miny: bb.minY,
+                    maxx: bb.maxX,
+                    maxy: bb.maxY
+                })
+                .up()
+                .ele('BoundingBox', {
+                    SRS: `EPSG:${l.epsg}`,
+                    minx: llbb.minX,
+                    miny: llbb.minY,
+                    maxx: llbb.maxX,
+                    maxy: llbb.maxY
+                })
                 .up();
-            layers;
+
+            for (const dim of this.wmsDimensions(l)) layers.import(dim);
+
+            layers.up();
         }
         return layers.up();
     }
@@ -93,40 +115,86 @@ class WMS extends Protocol {
         return list;
     }
 
+    wmsDimensions(layer) {
+        if (!layer.dimensions) return [];
+        const r = [];
+        for (const dimName of Object.keys(layer.dimensions)) {
+            const dim = layer.dimensions[dimName];
+            const d = fragment().ele('Dimension', {
+                name: forv(dim.name),
+                units: forv(dim.units),
+                unitSymbol: forv(dim.unitSymbol),
+                default: forv(dim.default),
+                current: dim.current ? '1' : undefined
+            });
+
+            let format = (v) => v;
+            if (dim.name === 'time') format = (v) => v.toISOString();
+
+            const values = forv(dim.values);
+            if (typeof values === 'object' && values instanceof Array)
+                d.txt(values.map(format).join(',')).up();
+            else d.txt(`${format(values.min)}/${format(values.max)}/${values.res}`).up();
+            r.push(d);
+        }
+        return r;
+    }
+
     getCapabilities(version) {
         let caps = create({ version: '1.0' });
-        if (version === '1.1.1') caps = caps.dtd({ sysID: 'http://schemas.opengis.net/wms/1.1.1/WMS_MS_Capabilities.dtd' });
+        if (version === '1.1.1')
+            caps = caps.dtd({
+                sysID: 'http://schemas.opengis.net/wms/1.1.1/WMS_MS_Capabilities.dtd'
+            });
 
         caps.ele('WMT_MS_Capabilities', { ...wmsAttrs[version] })
             .ele('Service')
-                .ele('Name').txt('OGC:WMS').up()
-                .ele('Title').txt('intercity.js').up()
-                .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': this.url }).up()
+            .ele('Name')
+            .txt('OGC:WMS')
+            .up()
+            .ele('Title')
+            .txt('intercity.js')
+            .up()
+            .ele('OnlineResource', {
+                'xmlns:xlink': 'http://www.w3.org/1999/xlink',
+                'xlink:href': this.url
+            })
+            .up()
             .up()
             .ele('Capability')
-                .ele('Request')
-                    .ele('GetCapabilities')
-                        .ele('Format').txt('application/vnd.ogc.wms_xml').up()
-                        .ele('DCPType')
-                            .ele('HTTP')
-                                .ele('Get')
-                                    .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': this.url }).up()
-                                .up()
-                            .up()
-                        .up()
-                    .up()
-                    .ele('GetMap')
-                        .import(this.wmsFormats())
-                        .ele('DCPType')
-                            .ele('HTTP')
-                                .ele('Get')
-                                    .ele('OnlineResource', { 'xmlns:xlink': 'http://www.w3.org/1999/xlink', 'xlink:href': this.url }).up()
-                                .up()
-                            .up()
-                        .up()
-                    .up()
-                .up()
-                .import(this.wmsLayers())
+            .ele('Request')
+            .ele('GetCapabilities')
+            .ele('Format')
+            .txt('application/vnd.ogc.wms_xml')
+            .up()
+            .ele('DCPType')
+            .ele('HTTP')
+            .ele('Get')
+            .ele('OnlineResource', {
+                'xmlns:xlink': 'http://www.w3.org/1999/xlink',
+                'xlink:href': this.url
+            })
+            .up()
+            .up()
+            .up()
+            .up()
+            .up()
+            .ele('GetMap')
+            .import(this.wmsFormats())
+            .ele('DCPType')
+            .ele('HTTP')
+            .ele('Get')
+            .ele('OnlineResource', {
+                'xmlns:xlink': 'http://www.w3.org/1999/xlink',
+                'xlink:href': this.url
+            })
+            .up()
+            .up()
+            .up()
+            .up()
+            .up()
+            .up()
+            .import(this.wmsLayers())
             .up();
 
         const xml = caps.root().end({ prettyPrint: true });
@@ -156,13 +224,18 @@ class WMS extends Protocol {
             throw new Error(`Invalid spatial reference specified: ${e}`);
         }
 
-        const width = +(getQueryParam(request.query, 'width', 512));
-        const height = +(getQueryParam(request.query, 'height', 512));
+        const width = +getQueryParam(request.query, 'width', 512);
+        const height = +getQueryParam(request.query, 'height', 512);
         const queryBbox = getQueryParam(request.query, 'bbox');
         if (!queryBbox) throw new Error('"BBOX" is mandatory in WMS"');
         const splitBbox = queryBbox.split(',');
         if (splitBbox.length != 4) throw new Error('"Malformed "BBOX"');
-        const bbox = new gdal.Envelope({ minX: +splitBbox[0], minY: +splitBbox[1], maxX: +splitBbox[2], maxY: +splitBbox[3] });
+        const bbox = new gdal.Envelope({
+            minX: +splitBbox[0],
+            minY: +splitBbox[1],
+            maxX: +splitBbox[2],
+            maxY: +splitBbox[3]
+        });
 
         for (const l of core.layers) {
             if (layers.includes(l.name)) {
@@ -172,8 +245,31 @@ class WMS extends Protocol {
                     if (!reqSRS) throw new Error(`Unsupported CRS ${querySRS}`);
                 }
 
-                const mapRequest = new Request(request, l, reqSRS, bbox, format, width, height);
-                core.fastify.log.debug(`WMS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`);
+                let dimensions = {};
+                if (l.dimensions)
+                    for (const dim of Object.keys(l.dimensions)) {
+                        const value = getQueryParam(request.query, dim, l.dimensions[dim].default);
+                        // TODO: validate the values
+                        if (value !== undefined) {
+                            if (l.dimensions[dim].values.min !== undefined)
+                                dimensions[dim] = parseFloat(value);
+                            else dimensions[dim] = value;
+                        }
+                    }
+
+                const mapRequest = new Request({
+                    request,
+                    layer: l,
+                    srs: reqSRS,
+                    bbox,
+                    format,
+                    width,
+                    height,
+                    dimensions
+                });
+                core.fastify.log.debug(
+                    `WMS> serving ${mapRequest.layer}, ${JSON.stringify(mapRequest.bbox)}`
+                );
                 return l.handler(mapRequest, new Reply(mapRequest, reply, l));
             }
         }

@@ -1,6 +1,7 @@
 'use strict';
 const gdal = require('gdal-async');
 const fastify = require('fastify')(process.env.DEBUG ? { logger: { level: 'debug' } } : {});
+const Dimension = require('./dimension');
 
 const wgs84 = gdal.SpatialReference.fromEPSG(4326);
 
@@ -34,6 +35,19 @@ class Layer {
             maxX: Math.max(ul.x, lr.x),
             maxY: Math.max(ul.y, lr.y)
         });
+        if (opts.dimensions) {
+            this.dimensions = {};
+            for (const d of Object.keys(opts.dimensions)) {
+                this.dimensions[d] = new Dimension(d, {
+                    title: opts.dimensions[d].title,
+                    units: opts.dimensions[d].units,
+                    unitSymbol: opts.dimensions[d].unitSymbol,
+                    default: opts.dimensions[d].default,
+                    values: opts.dimensions[d].values,
+                    current: opts.dimensions[d].current
+                });
+            }
+        }
     }
 }
 
