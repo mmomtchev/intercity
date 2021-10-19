@@ -49,30 +49,41 @@ intercity.layer({
     return reply.send(rain_ds);   // intercity will do the rest (with GDAL's default float -> byte conversion)
 });
 
-// A random dynamically generated yellow layer
+// A dynamically generated layer filled with a
+// client-specified color in a WMS/WMTS dimension
 intercity.layer({
-    name: 'random:yellow',
-    title: 'random yellow',
+    name: 'random:color',
+    title: 'random color',
     srs: gdal.SpatialReference.fromEPSG(4326),
-    bbox: { minX: -8, minY: 38, maxX: 12, maxY: 53 }
+    bbox: { minX: -8, minY: 38, maxX: 12, maxY: 53 },
+    dimensions: {
+        units: 'color',
+        unitSymbol: '🎨',
+        // values can be dynamic, will be computed at every GetCapabilities
+        values: () => ['red', 'green', 'blue'],
+        default: 'red'
+    }
 }, async (request, reply) => {
     // if you return a raster band without geospatial metadata,
     // it is automatically considered to use the main SRS
     // and to cover the declared bounding box
     const ds = await gdal.openAsync('temp', 'w', 'MEM', 128, 128, 3, gdal.GDT_CFloat32);
-    const [red, green, blue] = await Promise.all([
-        ds.bands.getAsync(1),
-        ds.bands.getAsync(2),
-        ds.bands.getAsync(3)
-    ]);
+    const bands = {
+        red: await ds.bands.getAsync(1),
+        green: await ds.bands.getAsync(2),
+        blue: await ds.bands.getAsync(3)
+    }
+    // intercity will pass a dimensions object with all the parameters
+    const color = bands[request.dimensions.color];
+
     const data = new Uint8Array(128 * 128);
     for (let i = 0; i < data.length; i++)
         data[i] = Math.random() * 255;
-    await Promise.all([
-        red.pixels.writeAsync(0, 0, 128, 128, data),
-        green.pixels.writeAsync(0, 0, 128, 128, data),
+    await Promise.all([red.fillAsync(0),
+        green.fillAsync(0),
         blue.fillAsync(0)
     ]);
+    await color.pixels.writeAsync(0, 0, 128, 128, data);
     return reply.send(ds);   // intercity will do the rest
 });
 
