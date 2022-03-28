@@ -95,3 +95,9 @@ intercity.use(intercity.wkss.GoogleCRS84Quad);
 
 intercity.listen(3000).catch(e => console.error(e));
 ```
+
+# Project status
+
+`intercity` is my only major pure-JS project on which I work on paragliding trips during the summer while living off-grid on my 12V Macbook Air.
+
+It may appear stalled, but it is not.
